@@ -1,668 +1,554 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TimeTable SMPN 1 Bangsal</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TimeTable - SMP Negeri 1 Bangsal</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 </head>
-<body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col">
+<body class="bg-slate-100 text-slate-800 font-sans min-h-screen">
 
-    <!-- ================= 1. LOGIN PAGE ================= -->
-    <div id="loginSection" class="fixed inset-0 bg-slate-900 bg-opacity-95 z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full border border-slate-100">
-            <div class="text-center mb-6">
-                <div class="bg-indigo-100 text-indigo-600 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3">
-                    <i data-lucide="calendar" class="w-8 h-8"></i>
-                </div>
-                <h2 class="text-2xl font-bold text-slate-800">SIM Jadwal Pelajaran</h2>
-                <p class="text-sm text-slate-500">SMP Negeri 1 Bangsal</p>
-            </div>
+  <!-- URL WEB APP GOOGLE APPS SCRIPT -->
+  <script>
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbx9Kc2eK1EuCAOYXdrRuub5WB_6qlKEKjnksjJpqayeOL0jLnMiNaZC8kx7ymO1I5AC/exec";
+  </script>
 
-            <form id="loginForm" class="space-y-4" onsubmit="handleLogin(event)">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-600 mb-1">USERNAME</label>
-                    <input type="text" id="loginUser" required placeholder="Username" 
-                        class="w-full px-4 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-600 mb-1">PASSWORD</label>
-                    <input type="password" id="loginPass" required placeholder="Password" 
-                        class="w-full px-4 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
-                </div>
-                <div id="loginError" class="hidden text-xs text-red-600 bg-red-50 p-2.5 rounded-lg border border-red-200">
-                    Username atau password salah!
-                </div>
-                <button type="submit" id="btnLoginSubmit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 rounded-lg shadow transition flex items-center justify-center gap-2">
-                    <i data-lucide="log-in" class="w-4 h-4"></i> Masuk Aplikasi
-                </button>
-            </form>
+  <!-- MODAL LOGIN -->
+  <div id="loginModal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8 border border-slate-100">
+      <div class="text-center mb-6">
+        <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-indigo-100 text-indigo-600 mb-4">
+          <i class="fa-solid fa-calendar-days text-2xl"></i>
         </div>
+        <h2 class="text-2xl font-bold text-slate-800">SIM Jadwal Pelajaran</h2>
+        <p class="text-sm text-slate-500">SMP Negeri 1 Bangsal</p>
+      </div>
+
+      <form id="loginForm" onsubmit="handleLogin(event)">
+        <div class="space-y-4">
+          <div>
+            <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Username</label>
+            <input type="text" id="loginUsername" required class="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Password</label>
+            <input type="password" id="loginPassword" required class="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm">
+          </div>
+        </div>
+
+        <div id="loginError" class="hidden mt-4 p-3 rounded-lg bg-red-50 border border-red-200 text-red-600 text-xs font-medium text-center">
+          Username atau password salah!
+        </div>
+
+        <button type="submit" id="loginBtn" class="mt-6 w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition duration-200 text-sm flex items-center justify-center gap-2">
+          <span>Masuk Aplikasi</span>
+          <i class="fa-solid fa-arrow-right"></i>
+        </button>
+      </form>
     </div>
+  </div>
 
-    <!-- ================= 2. NAVBAR ================= -->
-    <header class="bg-white border-b sticky top-0 z-30 shadow-sm">
-        <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <div class="bg-indigo-600 text-white p-2 rounded-lg"><i data-lucide="grid" class="w-5 h-5"></i></div>
-                <div>
-                    <h1 class="font-bold text-slate-800 text-base">TimeTable SMPN 1 Bangsal</h1>
-                    <p class="text-xs text-slate-500" id="userBadge">Pengguna: -</p>
-                </div>
-            </div>
-            <div class="flex items-center gap-2">
-                <button onclick="switchTab('jadwal')" class="px-3 py-1.5 rounded-lg text-sm font-medium bg-indigo-50 text-indigo-600 hover:bg-indigo-100">Plotting Jadwal</button>
-                <button onclick="switchTab('guru')" class="px-3 py-1.5 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100">Data Guru & Tugas</button>
-                <button onclick="switchTab('waktu')" class="px-3 py-1.5 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100">Setting Waktu</button>
-                <button onclick="saveAllJadwalToGAS()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg text-sm font-medium flex items-center gap-1 shadow-sm">
-                    <i data-lucide="save" class="w-4 h-4"></i> Simpan Ke Sheet
-                </button>
-                <button onclick="handleLogout()" class="bg-slate-100 p-2 rounded-lg text-slate-600 hover:bg-slate-200"><i data-lucide="log-out" class="w-4 h-4"></i></button>
-            </div>
+  <!-- APLIKASI UTAMA (DITAMPILKAN SETELAH LOGIN) -->
+  <div id="appContainer" class="hidden min-h-screen flex flex-col">
+    
+    <!-- NAVBAR -->
+    <header class="bg-indigo-900 text-white shadow-lg sticky top-0 z-40">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+          <i class="fa-solid fa-calendar-days text-2xl text-indigo-300"></i>
+          <div>
+            <h1 class="font-bold text-lg leading-none">TimeTable SMPN 1 Bangsal</h1>
+            <span class="text-xs text-indigo-300">Pengguna: <span id="currentUser">Admin</span></span>
+          </div>
         </div>
+
+        <!-- MENU TABS -->
+        <nav class="flex space-x-1 bg-indigo-950/50 p-1 rounded-xl">
+          <button onclick="switchTab('tabJadwal')" id="btnTabJadwal" class="px-4 py-2 text-xs font-semibold rounded-lg transition text-white bg-indigo-600">Plotting Jadwal</button>
+          <button onclick="switchTab('tabGuru')" id="btnTabGuru" class="px-4 py-2 text-xs font-semibold rounded-lg transition text-indigo-200 hover:text-white">Data Guru & Tugas</button>
+          <button onclick="switchTab('tabWaktu')" id="btnTabWaktu" class="px-4 py-2 text-xs font-semibold rounded-lg transition text-indigo-200 hover:text-white">Setting Waktu</button>
+        </nav>
+
+        <div class="flex items-center gap-2">
+          <button onclick="resetAppSheets()" class="px-3 py-1.5 bg-red-600/80 hover:bg-red-600 text-white text-xs font-medium rounded-lg transition flex items-center gap-1.5" title="Hapus sheet duplikat dan inisialisasi ulang">
+            <i class="fa-solid fa-rotate"></i>
+            <span>Reset Sheet</span>
+          </button>
+          <button onclick="logout()" class="px-3 py-1.5 bg-indigo-800 hover:bg-indigo-700 text-white text-xs font-medium rounded-lg transition">
+            <i class="fa-solid fa-right-from-bracket"></i>
+          </button>
+        </div>
+      </div>
     </header>
 
-    <!-- ================= 3. TAB PLOTTING JADWAL ================= -->
-    <main id="tabJadwal" class="flex-1 max-w-7xl w-full mx-auto p-6 space-y-4">
-        <div id="conflictAlert" class="hidden bg-red-50 border border-red-300 rounded-xl p-4 flex items-start gap-3 shadow-md">
-            <i data-lucide="alert-triangle" class="w-6 h-6 text-red-600 flex-shrink-0 mt-0.5"></i>
-            <div>
-                <h4 class="text-sm font-bold text-red-800">PERINGATAN BENTROK JADWAL!</h4>
-                <p id="conflictAlertMsg" class="text-xs text-red-700 mt-1"></p>
-            </div>
+    <!-- CONTENT AREA -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6">
+
+      <!-- TAB 1: PLOTTING JADWAL -->
+      <section id="tabJadwal" class="space-y-6">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+          <div>
+            <h2 class="font-bold text-slate-800 text-lg">Plotting Jadwal Pelajaran</h2>
+            <p class="text-xs text-slate-500">Atur alokasi jam mengajar guru per kelas</p>
+          </div>
+          <button onclick="saveJadwalBatch()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg shadow transition flex items-center gap-2">
+            <i class="fa-solid fa-floppy-disk"></i>
+            <span>Simpan Ke Sheet</span>
+          </button>
         </div>
 
-        <div class="bg-white p-4 rounded-xl border flex flex-wrap justify-between items-center gap-4">
-            <div class="flex items-center gap-4">
-                <div class="flex items-center gap-2">
-                    <span class="text-xs font-semibold text-slate-500">ROMBEL:</span>
-                    <select id="selectKelas" onchange="renderJadwalTable()" class="bg-slate-50 border rounded-lg px-3 py-1.5 text-sm font-medium text-slate-700"></select>
-                </div>
-                <div class="flex items-center gap-2">
-                    <span class="text-xs font-semibold text-slate-500">HARI:</span>
-                    <select id="selectHari" onchange="renderJadwalTable()" class="bg-slate-50 border rounded-lg px-3 py-1.5 text-sm font-medium text-slate-700"></select>
-                </div>
-            </div>
-            <div class="flex items-center gap-3 text-xs font-medium text-slate-500">
-                <span class="bg-slate-100 px-2.5 py-1 rounded-md"><i data-lucide="users" class="w-3.5 h-3.5 inline mr-1"></i>Guru: <strong id="statGuruCount" class="text-slate-700">0</strong></span>
-                <span class="bg-slate-100 px-2.5 py-1 rounded-md"><i data-lucide="layout-grid" class="w-3.5 h-3.5 inline mr-1"></i>Rombel: <strong id="statRombelCount" class="text-slate-700">0</strong></span>
-            </div>
-        </div>
-
-        <div class="bg-white rounded-xl border overflow-hidden shadow-sm">
-            <div class="p-3 bg-slate-50 border-b flex justify-between items-center">
-                <h3 class="text-sm font-bold text-slate-700 flex items-center gap-2">
-                    <i data-lucide="clock" class="w-4 h-4 text-indigo-600"></i>
-                    Plotting Jadwal: <span id="labelKelasHari" class="text-indigo-600">Kelas - Hari</span>
-                </h3>
-                <span class="text-xs text-slate-400 font-medium">Durasi Jam @40 Menit</span>
-            </div>
-            <table class="w-full text-left border-collapse text-sm">
-                <thead>
-                    <tr class="bg-slate-100 text-slate-600 uppercase text-xs border-b">
-                        <th class="py-3 px-4 w-20 text-center">JAM KE</th>
-                        <th class="py-3 px-4 w-48">WAKTU</th>
-                        <th class="py-3 px-4">MATA PELAJARAN</th>
-                        <th class="py-3 px-4">GURU PENGAMPU</th>
-                        <th class="py-3 px-4 w-20 text-center">AKSI</th>
-                    </tr>
-                </thead>
-                <tbody id="jadwalTableBody" class="divide-y divide-slate-200"></tbody>
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden p-4">
+          <div class="overflow-x-auto">
+            <table class="w-full text-xs text-left border-collapse" id="jadwalMatrixTable">
+              <thead>
+                <tr class="bg-slate-100 text-slate-700 uppercase border-b border-slate-200">
+                  <th class="p-2 border">Hari</th>
+                  <th class="p-2 border">Jam Ke</th>
+                  <th class="p-2 border">Waktu</th>
+                  <th id="kelasHeaderGroup" class="p-0 border">
+                    <!-- Dynamic Header Kelas (Master_Kelas) -->
+                  </th>
+                </tr>
+              </thead>
+              <tbody id="jadwalMatrixBody">
+                <!-- Loaded via JavaScript -->
+              </tbody>
             </table>
+          </div>
         </div>
-    </main>
+      </section>
 
-    <!-- ================= 4. TAB DATA GURU & TUGAS TAMBAHAN ================= -->
-    <main id="tabGuru" class="hidden flex-1 max-w-7xl w-full mx-auto p-6 space-y-4">
-        <div class="flex justify-between items-center bg-white p-4 rounded-xl border">
-            <div>
-                <h3 class="font-bold text-slate-700">Data Master Guru & Tugas Tambahan</h3>
-                <p class="text-xs text-slate-500">Beban mengajar minimal 24 JP/minggu (Tatap Muka + Tugas Tambahan)</p>
-            </div>
-            <button onclick="openGuruModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-lg text-sm flex items-center gap-1">
-                <i data-lucide="plus" class="w-4 h-4"></i> Tambah Guru Baru
-            </button>
+      <!-- TAB 2: DATA GURU -->
+      <section id="tabGuru" class="hidden space-y-6">
+        <div class="flex items-center justify-between bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+          <div>
+            <h2 class="font-bold text-slate-800 text-lg">Master Data Guru</h2>
+            <p class="text-xs text-slate-500">Kelola informasi guru, NUPTK, NIP, dan beban mengajar</p>
+          </div>
+          <button onclick="openGuruModal()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-lg shadow transition flex items-center gap-2">
+            <i class="fa-solid fa-user-plus"></i>
+            <span>Tambah Guru</span>
+          </button>
         </div>
-        <div class="bg-white rounded-xl border overflow-hidden shadow-sm">
-            <table class="w-full text-left text-sm">
-                <thead class="bg-slate-100 text-xs text-slate-600 uppercase border-b">
-                    <tr>
-                        <th class="p-3">Kode</th>
-                        <th class="p-3">Nama Lengkap & NIP</th>
-                        <th class="p-3">Kompetensi</th>
-                        <th class="p-3 text-center">JJM Tatap Muka</th>
-                        <th class="p-3">Tugas Tambahan (Ekuivalensi)</th>
-                        <th class="p-3 text-center">Total Beban</th>
-                        <th class="p-3 text-center">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody id="guruTableBody" class="divide-y"></tbody>
+
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+          <div class="overflow-x-auto">
+            <table class="w-full text-xs text-left">
+              <thead class="bg-slate-100 text-slate-700 font-bold border-b border-slate-200">
+                <tr>
+                  <th class="p-3 border">ID Guru</th>
+                  <th class="p-3 border">Kode</th>
+                  <th class="p-3 border">Nama Guru</th>
+                  <th class="p-3 border">NUPTK</th>
+                  <th class="p-3 border">NIP</th>
+                  <th class="p-3 border">Kompetensi</th>
+                  <th class="p-3 border text-center">JJM</th>
+                  <th class="p-3 border text-center">Total JJM</th>
+                  <th class="p-3 border text-center">Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="guruTableBody" class="divide-y divide-slate-200">
+                <!-- Loaded via JavaScript -->
+              </tbody>
             </table>
+          </div>
         </div>
+      </section>
+
+      <!-- TAB 3: SETTING WAKTU -->
+      <section id="tabWaktu" class="hidden space-y-6">
+        <div class="flex items-center justify-between bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+          <div>
+            <h2 class="font-bold text-slate-800 text-lg">Pengaturan Waktu Belajar</h2>
+            <p class="text-xs text-slate-500">Atur durasi jam pelajaran dan jam istirahat</p>
+          </div>
+          <button onclick="saveWaktuSetting()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg shadow transition flex items-center gap-2">
+            <i class="fa-solid fa-floppy-disk"></i>
+            <span>Simpan Waktu</span>
+          </button>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
+          <table class="w-full text-xs text-left">
+            <thead class="bg-slate-100 text-slate-700 font-bold border-b">
+              <tr>
+                <th class="p-2 border">Hari</th>
+                <th class="p-2 border">Jam Ke</th>
+                <th class="p-2 border">Waktu Mulai</th>
+                <th class="p-2 border">Waktu Selesai</th>
+                <th class="p-2 border text-center">Istirahat?</th>
+                <th class="p-2 border">Keterangan</th>
+              </tr>
+            </thead>
+            <tbody id="waktuTableBody">
+              <!-- Loaded via JavaScript -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+
     </main>
+  </div>
 
-    <!-- ================= 5. TAB SETTING RENTANG WAKTU ================= -->
-    <main id="tabWaktu" class="hidden flex-1 max-w-7xl w-full mx-auto p-6 space-y-4">
-        <div class="flex justify-between items-center bg-white p-4 rounded-xl border">
-            <h3 class="font-bold text-slate-700">Pengaturan Jam Pelajaran & Istirahat</h3>
-            <button onclick="addWaktuRow()" class="bg-indigo-600 text-white px-3 py-1.5 rounded-lg text-sm flex items-center gap-1">
-                <i data-lucide="plus" class="w-4 h-4"></i> Tambah Jam
-            </button>
+  <!-- MODAL GURU FORM -->
+  <div id="guruModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg p-6">
+      <h3 id="guruModalTitle" class="text-lg font-bold text-slate-800 mb-4">Tambah Data Guru</h3>
+      <form id="guruForm" onsubmit="handleSaveGuru(event)" class="space-y-3 text-xs">
+        <input type="hidden" id="guru_id_guru">
+        <div>
+          <label class="font-bold text-slate-600">Kode Guru</label>
+          <input type="text" id="guru_kode_guru" required class="w-full p-2 border rounded mt-1">
         </div>
-        <div class="bg-white rounded-xl border p-4">
-            <table class="w-full text-left text-sm">
-                <thead class="bg-slate-100 text-xs text-slate-600 uppercase">
-                    <tr>
-                        <th class="p-2">Hari</th>
-                        <th class="p-2">Jam Ke</th>
-                        <th class="p-2">Rentang Waktu</th>
-                        <th class="p-2 text-center">Istirahat?</th>
-                        <th class="p-2">Keterangan</th>
-                        <th class="p-2">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody id="waktuTableBody" class="divide-y"></tbody>
-            </table>
-            <button onclick="saveWaktuSetting()" class="mt-4 bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-medium">Simpan Perubahan Waktu</button>
+        <div>
+          <label class="font-bold text-slate-600">Nama Guru</label>
+          <input type="text" id="guru_nama_guru" required class="w-full p-2 border rounded mt-1">
         </div>
-    </main>
-
-    <!-- MODAL FORM GURU -->
-    <div id="guruModal" class="hidden fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 z-50">
-        <div class="bg-white rounded-xl p-6 max-w-lg w-full space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto">
-            <h3 class="font-bold text-lg text-slate-800" id="guruModalTitle">Tambah Data Guru</h3>
-            <input type="hidden" id="editGuruId">
-            
-            <div class="grid grid-cols-2 gap-3">
-                <div><label class="text-xs font-semibold">Kode Guru</label><input type="text" id="gKode" class="w-full border rounded p-2 text-sm" placeholder="G01"></div>
-                <div><label class="text-xs font-semibold">NIP</label><input type="text" id="gNip" class="w-full border rounded p-2 text-sm" placeholder="1980..."></div>
-            </div>
-            
-            <div><label class="text-xs font-semibold">Nama Lengkap & Gelar</label><input type="text" id="gNama" class="w-full border rounded p-2 text-sm" placeholder="Nama Guru, S.Pd."></div>
-            <div><label class="text-xs font-semibold">Kompetensi / Mapel Utama</label><input type="text" id="gKomp" class="w-full border rounded p-2 text-sm" placeholder="Matematika"></div>
-            
-            <div>
-                <label class="text-xs font-semibold">JJM Mengajar Tatap Muka (JP)</label>
-                <input type="number" id="gJjm" onchange="calculateTotalJJM()" class="w-full border rounded p-2 text-sm font-bold text-indigo-600" value="0">
-            </div>
-
-            <div class="border-t pt-3 space-y-2">
-                <label class="text-xs font-bold text-slate-700 block">Tugas Tambahan (Pemenuhan Jam DAPODIK)</label>
-                <div>
-                    <label class="text-xs text-slate-500">1. Tugas Utama / Melekat (Pilih Maks. 1):</label>
-                    <select id="gTugasUtama" onchange="calculateTotalJJM()" class="w-full border rounded p-2 text-sm">
-                        <option value="0">-- Tidak Ada Tugas Utama --</option>
-                        <option value="12">Wakil Kepala Sekolah (12 JP)</option>
-                        <option value="12">Kepala Perpustakaan (12 JP)</option>
-                        <option value="12">Kepala Laboratorium (12 JP)</option>
-                    </select>
-                </div>
-
-                <div>
-                    <label class="text-xs text-slate-500">2. Tugas Tambahan Lainnya (Centang):</label>
-                    <div class="grid grid-cols-2 gap-2 mt-1 text-xs">
-                        <label class="flex items-center gap-1.5 border p-2 rounded cursor-pointer hover:bg-slate-50">
-                            <input type="checkbox" id="tt_walikelas" value="2" onchange="calculateTotalJJM()"> Wali Kelas (2 JP)
-                        </label>
-                        <label class="flex items-center gap-1.5 border p-2 rounded cursor-pointer hover:bg-slate-50">
-                            <input type="checkbox" id="tt_p5" value="2" onchange="calculateTotalJJM()"> Koordinator P5 (2 JP)
-                        </label>
-                        <label class="flex items-center gap-1.5 border p-2 rounded cursor-pointer hover:bg-slate-50">
-                            <input type="checkbox" id="tt_guruwali" value="2" onchange="calculateTotalJJM()"> Guru Wali (2 JP)
-                        </label>
-                        <label class="flex items-center gap-1.5 border p-2 rounded cursor-pointer hover:bg-slate-50">
-                            <input type="checkbox" id="tt_osis" value="2" onchange="calculateTotalJJM()"> Pembina OSIS (2 JP)
-                        </label>
-                        <label class="flex items-center gap-1.5 border p-2 rounded cursor-pointer hover:bg-slate-50">
-                            <input type="checkbox" id="tt_ekstra" value="2" onchange="calculateTotalJJM()"> Pembina Ekstra (2 JP)
-                        </label>
-                        <label class="flex items-center gap-1.5 border p-2 rounded cursor-pointer hover:bg-slate-50">
-                            <input type="checkbox" id="tt_pkb" value="2" onchange="calculateTotalJJM()"> Koordinator PKB (2 JP)
-                        </label>
-                        <label class="flex items-center gap-1.5 border p-2 rounded cursor-pointer hover:bg-slate-50">
-                            <input type="checkbox" id="tt_tppk" value="1" onchange="calculateTotalJJM()"> Tim TPPK (1 JP)
-                        </label>
-                        <label class="flex items-center gap-1.5 border p-2 rounded cursor-pointer hover:bg-slate-50">
-                            <input type="checkbox" id="tt_piket" value="1" onchange="calculateTotalJJM()"> Guru Piket (1 JP)
-                        </label>
-                    </div>
-                </div>
-            </div>
-
-            <div class="bg-indigo-50 p-3 rounded-lg flex justify-between items-center border border-indigo-100">
-                <span class="text-xs font-bold text-indigo-900">Total Akumulasi Beban Kerja:</span>
-                <span id="gTotalCalc" class="text-base font-extrabold text-indigo-600">0 JP / Minggu</span>
-            </div>
-
-            <div class="flex justify-end gap-2 pt-2">
-                <button onclick="closeGuruModal()" class="px-4 py-2 bg-slate-100 text-sm rounded">Batal</button>
-                <button onclick="saveGuruData()" class="px-4 py-2 bg-indigo-600 text-white text-sm rounded">Simpan Data Guru</button>
-            </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="font-bold text-slate-600">NUPTK</label>
+            <input type="text" id="guru_nuptk" class="w-full p-2 border rounded mt-1">
+          </div>
+          <div>
+            <label class="font-bold text-slate-600">NIP</label>
+            <input type="text" id="guru_nip" class="w-full p-2 border rounded mt-1">
+          </div>
         </div>
+        <div>
+          <label class="font-bold text-slate-600">Kompetensi / Mapel</label>
+          <input type="text" id="guru_kompetensi" class="w-full p-2 border rounded mt-1">
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="font-bold text-slate-600">JJM Mengajar</label>
+            <input type="number" id="guru_jjm_mengajar" value="0" class="w-full p-2 border rounded mt-1">
+          </div>
+          <div>
+            <label class="font-bold text-slate-600">Total JJM</label>
+            <input type="number" id="guru_total_jjm" value="0" class="w-full p-2 border rounded mt-1">
+          </div>
+        </div>
+        <div class="flex justify-end gap-2 pt-4 border-t">
+          <button type="button" onclick="closeGuruModal()" class="px-4 py-2 bg-slate-200 text-slate-700 font-bold rounded">Batal</button>
+          <button type="submit" class="px-4 py-2 bg-indigo-600 text-white font-bold rounded">Simpan Guru</button>
+        </div>
+      </form>
     </div>
+  </div>
 
-    <!-- JAVASCRIPT LOGIC & KONEKSI BACKEND -->
-    <script>
-        // URL WEB APP GOOGLE APPS SCRIPT
-        const GAS_API_URL = "https://script.google.com/macros/s/AKfycbw_822-4-MqIhg_nkevgybGV13JCJgBeqr39EYaCHMhO2wAFI1uUsQeLHyEmN0xMgR9/exec";
+  <!-- JAYS SCRIPT LOGIC -->
+  <script>
+    let GLOBAL_DATA = { guru: [], kelas: [], waktu: [], jadwal: [] };
 
-        const LIST_HARI = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
-        let masterGuru = [], masterKelas = [], masterWaktu = [], stateJadwal = [];
+    // 1. OTENTIKASI LOG IN
+    async function handleLogin(e) {
+      e.preventDefault();
+      const u = document.getElementById("loginUsername").value;
+      const p = document.getElementById("loginPassword").value;
+      const btn = document.getElementById("loginBtn");
+      const err = document.getElementById("loginError");
 
-        document.addEventListener("DOMContentLoaded", () => {
-            lucide.createIcons();
-            checkSession();
+      btn.disabled = true;
+      btn.innerText = "Memproses...";
+      err.classList.add("hidden");
+
+      try {
+        const response = await fetch(GAS_URL, {
+          method: "POST",
+          body: JSON.stringify({ action: "login", username: u, password: p })
+        });
+        const res = await response.json();
+
+        if (res.status === "success") {
+          document.getElementById("loginModal").classList.add("hidden");
+          document.getElementById("appContainer").classList.remove("hidden");
+          document.getElementById("currentUser").innerText = res.user.nama || u;
+          loadAllData();
+        } else {
+          err.innerText = res.message || "Username atau password salah!";
+          err.classList.remove("hidden");
+        }
+      } catch (error) {
+        err.innerText = "Gagal terhubung ke Google Apps Script!";
+        err.classList.remove("hidden");
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<span>Masuk Aplikasi</span><i class="fa-solid fa-arrow-right"></i>`;
+      }
+    }
+
+    function logout() {
+      location.reload();
+    }
+
+    // 2. FETCH ALL DATA
+    async function loadAllData() {
+      try {
+        const response = await fetch(GAS_URL + "?action=getAllData");
+        const res = await response.json();
+        if (res.status === "success") {
+          GLOBAL_DATA = res.data;
+          renderGuruTable();
+          renderWaktuTable();
+          renderJadwalMatrix();
+        }
+      } catch (e) {
+        console.error("Gagal membaca data dari GAS", e);
+      }
+    }
+
+    // 3. TAB SWITCHING
+    function switchTab(tabId) {
+      ["tabJadwal", "tabGuru", "tabWaktu"].forEach(id => {
+        document.getElementById(id).classList.add("hidden");
+      });
+      document.getElementById(tabId).classList.remove("hidden");
+
+      const btnMap = {
+        tabJadwal: "btnTabJadwal",
+        tabGuru: "btnTabGuru",
+        tabWaktu: "btnTabWaktu"
+      };
+
+      Object.values(btnMap).forEach(btnId => {
+        const btn = document.getElementById(btnId);
+        btn.className = "px-4 py-2 text-xs font-semibold rounded-lg transition text-indigo-200 hover:text-white";
+      });
+      document.getElementById(btnMap[tabId]).className = "px-4 py-2 text-xs font-semibold rounded-lg transition text-white bg-indigo-600";
+    }
+
+    // 4. RENDER TAB GURU
+    function renderGuruTable() {
+      const tbody = document.getElementById("guruTableBody");
+      tbody.innerHTML = "";
+
+      if (!GLOBAL_DATA.guru || GLOBAL_DATA.guru.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="9" class="p-4 text-center text-slate-400">Belum ada data guru di Master_Guru</td></tr>`;
+        return;
+      }
+
+      GLOBAL_DATA.guru.forEach(g => {
+        tbody.innerHTML += `
+          <tr class="hover:bg-slate-50">
+            <td class="p-3 border font-mono text-slate-500">${g.id_guru || '-'}</td>
+            <td class="p-3 border font-bold">${g.kode_guru || '-'}</td>
+            <td class="p-3 border font-medium text-slate-800">${g.nama_guru || '-'}</td>
+            <td class="p-3 border font-mono text-slate-600">${g.nuptk || '-'}</td>
+            <td class="p-3 border font-mono text-slate-600">${g.nip || '-'}</td>
+            <td class="p-3 border text-slate-600">${g.kompetensi || '-'}</td>
+            <td class="p-3 border text-center font-bold">${g.jjm_mengajar || 0}</td>
+            <td class="p-3 border text-center font-bold text-indigo-600">${g.total_jjm || 0}</td>
+            <td class="p-3 border text-center space-x-1">
+              <button onclick='editGuru(${JSON.stringify(g)})' class="p-1 px-2 bg-amber-100 text-amber-700 rounded hover:bg-amber-200"><i class="fa-solid fa-pen"></i></button>
+              <button onclick="deleteGuru('${g.id_guru}')" class="p-1 px-2 bg-red-100 text-red-700 rounded hover:bg-red-200"><i class="fa-solid fa-trash"></i></button>
+            </td>
+          </tr>
+        `;
+      });
+    }
+
+    function openGuruModal() {
+      document.getElementById("guruForm").reset();
+      document.getElementById("guru_id_guru").value = "";
+      document.getElementById("guruModalTitle").innerText = "Tambah Data Guru";
+      document.getElementById("guruModal").classList.remove("hidden");
+    }
+
+    function closeGuruModal() {
+      document.getElementById("guruModal").classList.add("hidden");
+    }
+
+    function editGuru(g) {
+      document.getElementById("guru_id_guru").value = g.id_guru || "";
+      document.getElementById("guru_kode_guru").value = g.kode_guru || "";
+      document.getElementById("guru_nama_guru").value = g.nama_guru || "";
+      document.getElementById("guru_nuptk").value = g.nuptk || "";
+      document.getElementById("guru_nip").value = g.nip || "";
+      document.getElementById("guru_kompetensi").value = g.kompetensi || "";
+      document.getElementById("guru_jjm_mengajar").value = g.jjm_mengajar || 0;
+      document.getElementById("guru_total_jjm").value = g.total_jjm || 0;
+      document.getElementById("guruModalTitle").innerText = "Edit Data Guru";
+      document.getElementById("guruModal").classList.remove("hidden");
+    }
+
+    async function handleSaveGuru(e) {
+      e.preventDefault();
+      const guruObj = {
+        id_guru: document.getElementById("guru_id_guru").value,
+        kode_guru: document.getElementById("guru_kode_guru").value,
+        nama_guru: document.getElementById("guru_nama_guru").value,
+        nuptk: document.getElementById("guru_nuptk").value,
+        nip: document.getElementById("guru_nip").value,
+        kompetensi: document.getElementById("guru_kompetensi").value,
+        jjm_mengajar: parseInt(document.getElementById("guru_jjm_mengajar").value) || 0,
+        total_jjm: parseInt(document.getElementById("guru_total_jjm").value) || 0
+      };
+
+      await fetch(GAS_URL, {
+        method: "POST",
+        body: JSON.stringify({ action: "saveGuru", guru: guruObj })
+      });
+
+      closeGuruModal();
+      loadAllData();
+    }
+
+    async function deleteGuru(id_guru) {
+      if (!confirm("Yakin ingin menghapus guru ini?")) return;
+      await fetch(GAS_URL, {
+        method: "POST",
+        body: JSON.stringify({ action: "deleteGuru", id_guru: id_guru })
+      });
+      loadAllData();
+    }
+
+    // 5. RENDER SETTING WAKTU
+    function renderWaktuTable() {
+      const tbody = document.getElementById("waktuTableBody");
+      tbody.innerHTML = "";
+
+      const defaultHari = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
+      const waktuData = GLOBAL_DATA.waktu && GLOBAL_DATA.waktu.length > 0 ? GLOBAL_DATA.waktu : [
+        { hari: "Senin", jam_ke: 1, waktu_mulai: "07:00", waktu_selesai: "07:40", is_istirahat: false, keterangan: "Upacara" },
+        { hari: "Senin", jam_ke: 2, waktu_mulai: "07:40", waktu_selesai: "08:20", is_istirahat: false, keterangan: "KBM" },
+        { hari: "Senin", jam_ke: 3, waktu_mulai: "08:20", waktu_selesai: "09:00", is_istirahat: true, keterangan: "Istirahat I" }
+      ];
+
+      waktuData.forEach((w, idx) => {
+        tbody.innerHTML += `
+          <tr class="waktu-row">
+            <td class="p-2 border">
+              <input type="text" value="${w.hari}" class="w-full p-1 border rounded w-hari">
+            </td>
+            <td class="p-2 border">
+              <input type="number" value="${w.jam_ke}" class="w-20 p-1 border rounded w-jam">
+            </td>
+            <td class="p-2 border">
+              <input type="time" value="${w.waktu_mulai}" class="w-full p-1 border rounded w-mulai">
+            </td>
+            <td class="p-2 border">
+              <input type="time" value="${w.waktu_selesai}" class="w-full p-1 border rounded w-selesai">
+            </td>
+            <td class="p-2 border text-center">
+              <input type="checkbox" ${w.is_istirahat ? 'checked' : ''} class="w-istirahat">
+            </td>
+            <td class="p-2 border">
+              <input type="text" value="${w.keterangan || ''}" class="w-full p-1 border rounded w-ket">
+            </td>
+          </tr>
+        `;
+      });
+    }
+
+    async function saveWaktuSetting() {
+      const rows = document.querySelectorAll(".waktu-row");
+      const list = [];
+      rows.forEach(r => {
+        list.push({
+          hari: r.querySelector(".w-hari").value,
+          jam_ke: parseInt(r.querySelector(".w-jam").value) || 1,
+          waktu_mulai: r.querySelector(".w-mulai").value,
+          waktu_selesai: r.querySelector(".w-selesai").value,
+          is_istirahat: r.querySelector(".w-istirahat").checked,
+          keterangan: r.querySelector(".w-ket").value
+        });
+      });
+
+      await fetch(GAS_URL, {
+        method: "POST",
+        body: JSON.stringify({ action: "saveWaktuSetting", waktuList: list })
+      });
+      alert("Setting waktu berhasil disimpan ke Sheet Setting_Waktu!");
+    }
+
+    // 6. RENDER PLOTTING JADWAL MATRIX
+    function renderJadwalMatrix() {
+      const headerGroup = document.getElementById("kelasHeaderGroup");
+      const tbody = document.getElementById("jadwalMatrixBody");
+
+      const kelasList = GLOBAL_DATA.kelas.length > 0 ? GLOBAL_DATA.kelas : [
+        { id_kelas: "K7A", nama_kelas: "7A" },
+        { id_kelas: "K7B", nama_kelas: "7B" },
+        { id_kelas: "K8A", nama_kelas: "8A" }
+      ];
+
+      // Header Kelas
+      headerGroup.innerHTML = `<div class="grid grid-cols-${kelasList.length} text-center divide-x border-l">
+        ${kelasList.map(k => `<div class="p-2 font-bold">${k.nama_kelas}</div>`).join('')}
+      </div>`;
+
+      tbody.innerHTML = "";
+      const waktuData = GLOBAL_DATA.waktu.length > 0 ? GLOBAL_DATA.waktu : [
+        { hari: "Senin", jam_ke: 1, waktu_str: "07:00 - 07:40" },
+        { hari: "Senin", jam_ke: 2, waktu_str: "07:40 - 08:20" }
+      ];
+
+      waktuData.forEach(w => {
+        let cellHtml = "";
+        kelasList.forEach(k => {
+          const key = `${w.hari}_${w.jam_ke}_${k.id_kelas}`;
+          const currentJadwal = GLOBAL_DATA.jadwal.find(j => j.hari === w.hari && j.jam_ke == w.jam_ke && j.id_kelas === k.id_kelas) || {};
+
+          cellHtml += `
+            <div class="p-1 border-r text-center">
+              <select data-hari="${w.hari}" data-jam="${w.jam_ke}" data-kelas="${k.id_kelas}" class="jadwal-select w-full p-1 border rounded text-xs bg-slate-50 focus:bg-white">
+                <option value="">- Kosong -</option>
+                ${GLOBAL_DATA.guru.map(g => `<option value="${g.id_guru}" ${currentJadwal.id_guru === g.id_guru ? 'selected' : ''}>${g.kode_guru} (${g.kompetensi || 'Guru'})</option>`).join('')}
+              </select>
+            </div>
+          `;
         });
 
-        // ===================================================
-        // HELPER FUNGSI KONEKSI API FETCH DENGAN BACKEND GAS
-        // ===================================================
-        async function sendToGAS(payload) {
-            showLoading(true);
-            try {
-                // Mengirim request POST dengan JSON body
-                const response = await fetch(GAS_API_URL, {
-                    method: "POST",
-                    headers: { "Content-Type": "text/plain;charset=utf-8" },
-                    body: JSON.stringify(payload)
-                });
-                const result = await response.json();
-                showLoading(false);
-                return result;
-            } catch (err) {
-                showLoading(false);
-                console.error("API Error:", err);
-                alert("Terjadi kesalahan koneksi ke server Apps Script!");
-                return { status: "error", message: err.toString() };
-            }
+        tbody.innerHTML += `
+          <tr class="border-b">
+            <td class="p-2 border font-medium">${w.hari}</td>
+            <td class="p-2 border text-center font-bold">${w.jam_ke}</td>
+            <td class="p-2 border text-slate-500 whitespace-nowrap">${w.waktu_str || w.waktu_mulai}</td>
+            <td class="p-0 border">
+              <div class="grid grid-cols-${kelasList.length}">
+                ${cellHtml}
+              </div>
+            </td>
+          </tr>
+        `;
+      });
+    }
+
+    async function saveJadwalBatch() {
+      const selects = document.querySelectorAll(".jadwal-select");
+      const items = [];
+
+      selects.forEach(s => {
+        if (s.value) {
+          items.push({
+            hari: s.getAttribute("data-hari"),
+            jam_ke: parseInt(s.getAttribute("data-jam")),
+            id_kelas: s.getAttribute("data-kelas"),
+            id_guru: s.value
+          });
         }
+      });
 
-        function showLoading(isShowing) {
-            let loader = document.getElementById("globalLoader");
-            if (!loader) {
-                loader = document.createElement("div");
-                loader.id = "globalLoader";
-                loader.className = "fixed top-4 right-4 bg-indigo-600 text-white px-4 py-2 rounded-lg shadow-lg text-xs font-semibold z-50 flex items-center gap-2";
-                loader.innerHTML = `<span class="animate-spin">⏳</span> Memproses Data...`;
-                document.body.appendChild(loader);
-            }
-            loader.style.display = isShowing ? "flex" : "none";
-        }
+      await fetch(GAS_URL, {
+        method: "POST",
+        body: JSON.stringify({ action: "saveJadwalBatch", items: items })
+      });
+      alert("Jadwal pelajaran berhasil disimpan ke Sheet jadwal!");
+    }
 
-        function checkSession() {
-            const u = sessionStorage.getItem("user");
-            if (u) {
-                document.getElementById("loginSection").classList.add("hidden");
-                document.getElementById("userBadge").innerText = "Pengguna: " + u;
-                loadDataFromGAS();
-            } else {
-                document.getElementById("loginSection").classList.remove("hidden");
-            }
-        }
-
-        async function handleLogin(e) {
-            e.preventDefault();
-            const username = document.getElementById("loginUser").value;
-            const password = document.getElementById("loginPass").value;
-
-            const res = await sendToGAS({ action: "login", username, password });
-            if (res && res.status === "success") {
-                sessionStorage.setItem("user", res.user.nama);
-                checkSession();
-            } else {
-                document.getElementById("loginError").classList.remove("hidden");
-            }
-        }
-
-        function handleLogout() {
-            sessionStorage.clear();
-            location.reload();
-        }
-
-        function switchTab(tab) {
-            ["Jadwal", "Guru", "Waktu"].forEach(t => document.getElementById("tab" + t).classList.add("hidden"));
-            document.getElementById("tab" + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.remove("hidden");
-        }
-
-        async function loadDataFromGAS() {
-            showLoading(true);
-            try {
-                // Request GET data spreadsheet
-                const response = await fetch(GAS_API_URL + "?action=getAllData");
-                let res;
-                if (response.ok) {
-                    res = await response.json();
-                } else {
-                    // Fallback ke POST jika GET di-restrict
-                    res = await sendToGAS({ action: "getAllData" });
-                }
-                
-                showLoading(false);
-                if (res && res.status === "success") {
-                    masterGuru = res.data.guru || [];
-                    masterKelas = res.data.kelas || [];
-                    masterWaktu = res.data.waktu || [];
-                    stateJadwal = res.data.jadwal || [];
-
-                    populateKelasDropdown();
-                    populateHariDropdown();
-                    renderJadwalTable();
-                    renderGuruTable();
-                    renderWaktuTable();
-                }
-            } catch (err) {
-                showLoading(false);
-                console.error("Load Data Error:", err);
-            }
-        }
-
-        function populateKelasDropdown() {
-            const select = document.getElementById("selectKelas");
-            select.innerHTML = "";
-            masterKelas.forEach(k => {
-                select.innerHTML += `<option value="${k.id_kelas}">Kelas ${k.nama_kelas}</option>`;
-            });
-            document.getElementById("statRombelCount").innerText = masterKelas.length;
-        }
-
-        function populateHariDropdown() {
-            const select = document.getElementById("selectHari");
-            select.innerHTML = "";
-            LIST_HARI.forEach(hari => {
-                select.innerHTML += `<option value="${hari}">${hari}</option>`;
-            });
-        }
-
-        function getWaktuString(w) {
-            return w.waktu_str || `${w.waktu_mulai || '07:00'} - ${w.waktu_selesai || '07:40'}`;
-        }
-
-        function getStartMinutes(w) {
-            const range = getWaktuString(w);
-            const startStr = range.split("-")[0].trim();
-            const [h, m] = startStr.split(":").map(Number);
-            return (h || 0) * 60 + (m || 0);
-        }
-
-        // --- TAB PLOTTING JADWAL ---
-        function renderJadwalTable() {
-            const currentKelas = document.getElementById("selectKelas").value || (masterKelas[0] ? masterKelas[0].id_kelas : "K_7A");
-            const currentHari = document.getElementById("selectHari").value || "Senin";
-            
-            const kelasObj = masterKelas.find(k => k.id_kelas === currentKelas);
-            document.getElementById("labelKelasHari").innerText = `Kelas ${kelasObj ? kelasObj.nama_kelas : currentKelas} - Hari ${currentHari}`;
-
-            const tbody = document.getElementById("jadwalTableBody");
-            tbody.innerHTML = "";
-
-            const waktuHari = masterWaktu
-                .filter(w => String(w.hari).toLowerCase() === currentHari.toLowerCase())
-                .sort((a, b) => getStartMinutes(a) - getStartMinutes(b));
-
-            if (waktuHari.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" class="text-center py-6 text-slate-400">Belum ada pengaturan waktu untuk hari ${currentHari}.</td></tr>`;
-                return;
-            }
-
-            waktuHari.forEach(w => {
-                const tr = document.createElement("tr");
-                const isIstirahat = String(w.is_istirahat).toLowerCase() === "true" || w.is_istirahat === true;
-                const rentangWaktuText = getWaktuString(w);
-
-                if (isIstirahat) {
-                    tr.className = "bg-amber-50/70 text-amber-700 italic text-center font-medium border-y border-amber-200";
-                    tr.innerHTML = `<td colspan="5" class="py-2.5"><i data-lucide="coffee" class="w-4 h-4 inline mr-1"></i> ISTIRAHAT (${rentangWaktuText}) ${w.keterangan ? '- ' + w.keterangan : ''}</td>`;
-                } else {
-                    const existing = stateJadwal.find(j => j.hari === currentHari && parseInt(j.jam_ke) === parseInt(w.jam_ke) && j.id_kelas === currentKelas) || { nama_mapel: "", id_guru: "" };
-                    tr.innerHTML = `
-                        <td class="py-3 px-4 text-center font-bold bg-slate-50">${w.jam_ke}</td>
-                        <td class="py-3 px-4 text-slate-600 text-xs font-semibold">${rentangWaktuText}</td>
-                        <td class="py-3 px-4"><input type="text" value="${existing.nama_mapel || ''}" placeholder="Pilih / ketik mapel..." onchange="updateJadwalLocal('${currentHari}', ${w.jam_ke}, '${currentKelas}', 'mapel', this.value)" class="w-full border rounded-lg px-3 py-1.5 text-xs outline-none focus:ring-1 focus:ring-indigo-500"></td>
-                        <td class="py-3 px-4">
-                            <select onchange="updateJadwalLocal('${currentHari}', ${w.jam_ke}, '${currentKelas}', 'guru', this.value)" class="w-full border rounded-lg px-3 py-1.5 text-xs font-medium outline-none focus:ring-1 focus:ring-indigo-500">
-                                <option value="">-- Pilih Guru Pengampu --</option>
-                                ${masterGuru.map(g => `<option value="${g.id_guru}" ${existing.id_guru === g.id_guru ? 'selected' : ''}>${g.kode_guru} -${g.nama_guru}</option>`).join('')}
-                            </select>
-                        </td>
-                        <td class="py-3 px-4 text-center"><button onclick="clearSingleRow('${currentHari}', ${w.jam_ke}, '${currentKelas}')" class="text-slate-400 hover:text-red-600 transition"><i data-lucide="trash-2" class="w-4 h-4"></i></button></td>
-                    `;
-                }
-                tbody.appendChild(tr);
-            });
-            lucide.createIcons();
-            checkConflicts();
-        }
-
-        function updateJadwalLocal(hari, jamKe, idKelas, field, value) {
-            let entry = stateJadwal.find(j => j.hari === hari && parseInt(j.jam_ke) === parseInt(jamKe) && j.id_kelas === idKelas);
-            if (!entry) {
-                entry = { id_jadwal: `JAD_${hari}_${jamKe}_${idKelas}`, hari, jam_ke: jamKe, id_kelas: idKelas, id_guru: "", nama_mapel: "" };
-                stateJadwal.push(entry);
-            }
-            if (field === 'guru') entry.id_guru = value;
-            if (field === 'mapel') entry.nama_mapel = value;
-            checkConflicts();
-        }
-
-        function clearSingleRow(hari, jamKe, idKelas) {
-            stateJadwal = stateJadwal.filter(j => !(j.hari === hari && parseInt(j.jam_ke) === parseInt(jamKe) && j.id_kelas === idKelas));
-            renderJadwalTable();
-        }
-
-        function checkConflicts() {
-            const conflictAlert = document.getElementById("conflictAlert");
-            const conflictMsg = document.getElementById("conflictAlertMsg");
-            const map = {};
-            let conflictMsgText = "";
-
-            for (const item of stateJadwal) {
-                if (!item.id_guru) continue;
-                const key = `${item.hari}_J${item.jam_ke}_G${item.id_guru}`;
-                if (map[key]) {
-                    const g = masterGuru.find(x => x.id_guru === item.id_guru);
-                    conflictMsgText = `Guru <strong>${g ? g.nama_guru : item.id_guru}</strong> bentrok mengajar di kelas lain pada hari <strong>${item.hari}</strong> Jam Ke-<strong>${item.jam_ke}</strong>!`;
-                    break;
-                }
-                map[key] = item.id_kelas;
-            }
-
-            if (conflictMsgText) {
-                conflictMsg.innerHTML = conflictMsgText;
-                conflictAlert.classList.remove("hidden");
-            } else {
-                conflictAlert.classList.add("hidden");
-            }
-        }
-
-        // --- TAB DATA GURU & TUGAS TAMBAHAN ---
-        function renderGuruTable() {
-            document.getElementById("statGuruCount").innerText = masterGuru.length;
-            const tbody = document.getElementById("guruTableBody");
-            
-            tbody.innerHTML = masterGuru.map(g => {
-                const jjmTatapMuka = parseInt(g.jjm_mengajar || 0);
-                const tugasEq = parseInt(g.tugas_ekivalensi || 0);
-                const totalJJM = jjmTatapMuka + tugasEq;
-                const isMemenuhi = totalJJM >= 24;
-
-                const cleanNip = (g.nip || '-').toString().replace("'", "");
-                const cleanNama = (g.nama_guru && g.nama_guru !== "NaN" && g.nama_guru !== "aN:aN") ? g.nama_guru : "Belum diisi";
-
-                return `
-                    <tr class="hover:bg-slate-50">
-                        <td class="p-3 font-semibold">${g.kode_guru}</td>
-                        <td class="p-3"><strong>${cleanNama}</strong><br><span class="text-xs text-slate-400">NIP: ${cleanNip}</span></td>
-                        <td class="p-3">${g.kompetensi}</td>
-                        <td class="p-3 text-center font-semibold text-slate-700">${jjmTatapMuka} JP</td>
-                        <td class="p-3 text-xs text-slate-600">
-                            ${g.tugas_detail ? g.tugas_detail.replaceAll("tt_", "").replaceAll(",", ", ") : '-'} 
-                            <strong class="text-indigo-600">(+${tugasEq} JP)</strong>
-                        </td>
-                        <td class="p-3 text-center">
-                            <span class="px-2.5 py-1 rounded-full text-xs font-bold ${isMemenuhi ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}">
-                                ${totalJJM} JP ${isMemenuhi ? '✓' : '(Kurang)'}
-                            </span>
-                        </td>
-                        <td class="p-3 text-center">
-                            <button onclick="editGuru('${g.id_guru}')" class="text-indigo-600 mr-2"><i data-lucide="edit" class="w-4 h-4 inline"></i></button>
-                            <button onclick="deleteGuru('${g.id_guru}')" class="text-red-600"><i data-lucide="trash-2" class="w-4 h-4 inline"></i></button>
-                        </td>
-                    </tr>
-                `;
-            }).join('');
-            lucide.createIcons();
-        }
-
-        function calculateTotalJJM() {
-            const jjmTatapMuka = parseInt(document.getElementById("gJjm").value) || 0;
-            const tugasUtama = parseInt(document.getElementById("gTugasUtama").value) || 0;
-
-            let tugasTambahanTotal = 0;
-            const checkboxes = ["tt_walikelas", "tt_p5", "tt_guruwali", "tt_osis", "tt_ekstra", "tt_pkb", "tt_tppk", "tt_piket"];
-            checkboxes.forEach(id => {
-                const el = document.getElementById(id);
-                if (el && el.checked) tugasTambahanTotal += parseInt(el.value);
-            });
-
-            const totalEkivalensi = tugasUtama + tugasTambahanTotal;
-            const totalJP = jjmTatapMuka + totalEkivalensi;
-
-            document.getElementById("gTotalCalc").innerText = `${totalJP} JP / Minggu (${jjmTatapMuka} Tatap Muka + ${totalEkivalensi} Tugas)`;
-            return { totalJP, totalEkivalensi };
-        }
-
-        function openGuruModal() {
-            document.getElementById("editGuruId").value = "";
-            document.getElementById("gKode").value = "";
-            document.getElementById("gNip").value = "";
-            document.getElementById("gNama").value = "";
-            document.getElementById("gKomp").value = "";
-            document.getElementById("gJjm").value = "0";
-            document.getElementById("gTugasUtama").value = "0";
-
-            ["tt_walikelas", "tt_p5", "tt_guruwali", "tt_osis", "tt_ekstra", "tt_pkb", "tt_tppk", "tt_piket"].forEach(id => {
-                const el = document.getElementById(id);
-                if (el) el.checked = false;
-            });
-
-            calculateTotalJJM();
-            document.getElementById("guruModalTitle").innerText = "Tambah Data Guru";
-            document.getElementById("guruModal").classList.remove("hidden");
-        }
-
-        function editGuru(id) {
-            const g = masterGuru.find(x => x.id_guru === id);
-            if (!g) return;
-
-            document.getElementById("editGuruId").value = g.id_guru;
-            document.getElementById("gKode").value = g.kode_guru;
-            document.getElementById("gNip").value = (g.nip || "").replace("'", "");
-            document.getElementById("gNama").value = g.nama_guru;
-            document.getElementById("gKomp").value = g.kompetensi;
-            document.getElementById("gJjm").value = g.jjm_mengajar || 0;
-            document.getElementById("gTugasUtama").value = g.tugas_utama_val || "0";
-
-            const activeList = g.tugas_detail ? g.tugas_detail.split(",") : [];
-            ["tt_walikelas", "tt_p5", "tt_guruwali", "tt_osis", "tt_ekstra", "tt_pkb", "tt_tppk", "tt_piket"].forEach(id => {
-                const el = document.getElementById(id);
-                if (el) el.checked = activeList.includes(id);
-            });
-
-            calculateTotalJJM();
-            document.getElementById("guruModalTitle").innerText = "Edit Data Guru";
-            document.getElementById("guruModal").classList.remove("hidden");
-        }
-
-        function closeGuruModal() { document.getElementById("guruModal").classList.add("hidden"); }
-
-        async function saveGuruData() {
-            const { totalJP, totalEkivalensi } = calculateTotalJJM();
-
-            const activeList = [];
-            ["tt_walikelas", "tt_p5", "tt_guruwali", "tt_osis", "tt_ekstra", "tt_pkb", "tt_tppk", "tt_piket"].forEach(id => {
-                const el = document.getElementById(id);
-                if (el && el.checked) activeList.push(id);
-            });
-
-            const guruObj = {
-                id_guru: document.getElementById("editGuruId").value,
-                kode_guru: document.getElementById("gKode").value,
-                nip: document.getElementById("gNip").value,
-                nama_guru: document.getElementById("gNama").value,
-                kompetensi: document.getElementById("gKomp").value,
-                jjm_mengajar: document.getElementById("gJjm").value,
-                tugas_utama_val: document.getElementById("gTugasUtama").value,
-                tugas_ekivalensi: totalEkivalensi,
-                tugas_detail: activeList.join(","),
-                total_jjm: totalJP
-            };
-
-            const res = await sendToGAS({ action: "saveGuru", guru: guruObj });
-            if (res && res.status === "success") {
-                closeGuruModal();
-                alert(res.message || "Data guru berhasil disimpan!");
-                loadDataFromGAS();
-            }
-        }
-
-        async function deleteGuru(id_guru) {
-            if (confirm("Hapus data guru ini?")) {
-                const res = await sendToGAS({ action: "deleteGuru", id_guru });
-                if (res && res.status === "success") {
-                    alert(res.message || "Data guru dihapus!");
-                    loadDataFromGAS();
-                }
-            }
-        }
-
-        // --- SETTING WAKTU ---
-        function renderWaktuTable() {
-            const tbody = document.getElementById("waktuTableBody");
-            tbody.innerHTML = masterWaktu.map((w, idx) => {
-                const isIstirahat = String(w.is_istirahat).toLowerCase() === "true" || w.is_istirahat === true;
-                return `
-                    <tr class="hover:bg-slate-50">
-                        <td class="p-2"><input type="text" value="${w.hari}" class="w-24 border p-1 rounded text-xs" onchange="masterWaktu[${idx}].hari=this.value"></td>
-                        <td class="p-2"><input type="number" value="${w.jam_ke}" class="w-16 border p-1 rounded text-xs text-center font-bold" onchange="masterWaktu[${idx}].jam_ke=this.value"></td>
-                        <td class="p-2"><input type="text" value="${getWaktuString(w)}" class="w-48 border p-1 rounded text-xs font-semibold" onchange="updateWaktuString(${idx}, this.value)"></td>
-                        <td class="p-2 text-center"><input type="checkbox" ${isIstirahat ? 'checked' : ''} onchange="masterWaktu[${idx}].is_istirahat=this.checked; renderWaktuTable();"></td>
-                        <td class="p-2"><input type="text" value="${w.keterangan || ''}" class="w-32 border p-1 rounded text-xs" onchange="masterWaktu[${idx}].keterangan=this.value"></td>
-                        <td class="p-2"><button onclick="masterWaktu.splice(${idx},1);renderWaktuTable()" class="text-red-600 hover:bg-red-50 p-1 rounded"><i data-lucide="trash" class="w-4 h-4"></i></button></td>
-                    </tr>
-                `;
-            }).join('');
-            lucide.createIcons();
-        }
-
-        function updateWaktuString(idx, val) {
-            masterWaktu[idx].waktu_str = val;
-            const parts = val.split("-").map(s => s.trim());
-            if (parts.length === 2) {
-                masterWaktu[idx].waktu_mulai = parts[0];
-                masterWaktu[idx].waktu_selesai = parts[1];
-            }
-        }
-
-        function addWaktuRow() {
-            masterWaktu.push({ hari: "Senin", jam_ke: masterWaktu.length + 1, waktu_mulai: "07:00", waktu_selesai: "07:40", waktu_str: "07:00 - 07:40", is_istirahat: false, keterangan: "" });
-            renderWaktuTable();
-        }
-
-        async function saveWaktuSetting() {
-            const res = await sendToGAS({ action: "saveWaktuSetting", waktuList: masterWaktu });
-            if (res && res.status === "success") {
-                alert("Pengaturan rentang waktu berhasil disimpan!");
-                loadDataFromGAS();
-            }
-        }
-
-        async function saveAllJadwalToGAS() {
-            const res = await sendToGAS({ action: "saveJadwalBatch", items: stateJadwal });
-            if (res && res.status === "success") {
-                alert("Jadwal pelajaran berhasil disimpan ke Google Sheets!");
-            }
-        }
-    </script>
+    // 7. RESET & REBUILD SHEETS
+    async function resetAppSheets() {
+      if (!confirm("Fitur ini akan menghapus sheet duplikat/lama dan mereset ulang struktur tabel resmi. Lanjutkan?")) return;
+      try {
+        const response = await fetch(GAS_URL + "?action=resetSheets");
+        const res = await response.json();
+        alert(res.message);
+        loadAllData();
+      } catch (e) {
+        alert("Gagal melakukan reset sheet!");
+      }
+    }
+  </script>
 </body>
 </html>
