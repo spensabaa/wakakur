@@ -3,503 +3,580 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistem Time Table - SMPN 1 Bangsal</title>
-    <!-- Tailwind CSS CDN -->
+    <title>TimeTable SMPN 1 Bangsal</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
-    <style>
-        .custom-scrollbar::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-            background-color: #cbd5e1;
-            border-radius: 4px;
-        }
-    </style>
 </head>
-<body class="bg-slate-50 text-slate-800 font-sans antialiased min-h-screen flex flex-col">
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col">
 
-    <!-- ========================================== -->
-    <!-- 1. HALAMAN LOGIN                           -->
-    <!-- ========================================== -->
+    <!-- ================= 1. LOGIN PAGE ================= -->
     <div id="loginSection" class="fixed inset-0 bg-slate-900 bg-opacity-95 z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full border border-slate-100 relative">
+        <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full border border-slate-100">
             <div class="text-center mb-6">
-                <div class="bg-indigo-100 text-indigo-600 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3 shadow-inner">
+                <div class="bg-indigo-100 text-indigo-600 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3">
                     <i data-lucide="calendar" class="w-8 h-8"></i>
                 </div>
                 <h2 class="text-2xl font-bold text-slate-800">SIM Jadwal Pelajaran</h2>
-                <p class="text-sm text-slate-500 mt-1">SMP Negeri 1 Bangsal</p>
+                <p class="text-sm text-slate-500">SMP Negeri 1 Bangsal</p>
             </div>
 
             <form id="loginForm" class="space-y-4" onsubmit="handleLogin(event)">
                 <div>
-                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">Username</label>
-                    <div class="relative">
-                        <i data-lucide="user" class="w-5 h-5 absolute left-3 top-2.5 text-slate-400"></i>
-                        <input type="text" id="loginUser" required placeholder="Masukkan username" 
-                            class="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-                    </div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">USERNAME</label>
+                    <input type="text" id="loginUser" required placeholder="Username" 
+                        class="w-full px-4 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
                 </div>
-
                 <div>
-                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">Password</label>
-                    <div class="relative">
-                        <i data-lucide="lock" class="w-5 h-5 absolute left-3 top-2.5 text-slate-400"></i>
-                        <input type="password" id="loginPass" required placeholder="Masukkan password" 
-                            class="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-                    </div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">PASSWORD</label>
+                    <input type="password" id="loginPass" required placeholder="Password" 
+                        class="w-full px-4 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
                 </div>
-
                 <div id="loginError" class="hidden text-xs text-red-600 bg-red-50 p-2.5 rounded-lg border border-red-200">
                     Username atau password salah!
                 </div>
-
-                <button type="submit" 
-                    class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 rounded-lg shadow-md transition-all flex items-center justify-center gap-2">
+                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 rounded-lg shadow transition flex items-center justify-center gap-2">
                     <i data-lucide="log-in" class="w-4 h-4"></i> Masuk Aplikasi
                 </button>
             </form>
-            <div class="mt-6 text-center text-xs text-slate-400">
-                Akses Khusus Tim Kurikulum & Manajemen Sekolah
-            </div>
         </div>
     </div>
 
-    <!-- ========================================== -->
-    <!-- 2. NAVBAR & HEADER                         -->
-    <!-- ========================================== -->
-    <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+    <!-- ================= 2. NAVBAR ================= -->
+    <header class="bg-white border-b sticky top-0 z-30 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
             <div class="flex items-center gap-3">
-                <div class="bg-indigo-600 text-white p-2 rounded-lg">
-                    <i data-lucide="grid" class="w-5 h-5"></i>
-                </div>
+                <div class="bg-indigo-600 text-white p-2 rounded-lg"><i data-lucide="grid" class="w-5 h-5"></i></div>
                 <div>
-                    <h1 class="font-bold text-slate-800 text-base leading-tight">TimeTable SMPN 1 Bangsal</h1>
-                    <p class="text-xs text-slate-500">Aplikasi Penyusunan Jadwal Mengajar</p>
+                    <h1 class="font-bold text-slate-800 text-base">TimeTable SMPN 1 Bangsal</h1>
+                    <p class="text-xs text-slate-500" id="userBadge">Pengguna: -</p>
                 </div>
             </div>
-
-            <div class="flex items-center gap-3">
-                <button onclick="saveAllJadwalToGAS()" id="btnSave" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 shadow-sm transition-all">
-                    <i data-lucide="save" class="w-4 h-4"></i> Simpan ke Sheet
+            <div class="flex items-center gap-2">
+                <button onclick="switchTab('jadwal')" class="px-3 py-1.5 rounded-lg text-sm font-medium bg-indigo-50 text-indigo-600 hover:bg-indigo-100">Plotting Jadwal</button>
+                <button onclick="switchTab('guru')" class="px-3 py-1.5 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100">Data Guru</button>
+                <button onclick="switchTab('waktu')" class="px-3 py-1.5 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100">Setting Waktu</button>
+                <button onclick="saveAllJadwalToGAS()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg text-sm font-medium flex items-center gap-1 shadow-sm">
+                    <i data-lucide="save" class="w-4 h-4"></i> Simpan
                 </button>
-                <button onclick="handleLogout()" class="bg-slate-100 hover:bg-slate-200 text-slate-600 p-2 rounded-lg text-sm transition-all" title="Keluar">
-                    <i data-lucide="log-out" class="w-4 h-4"></i>
-                </button>
+                <button onclick="handleLogout()" class="bg-slate-100 p-2 rounded-lg text-slate-600 hover:bg-slate-200"><i data-lucide="log-out" class="w-4 h-4"></i></button>
             </div>
         </div>
     </header>
 
-    <!-- ========================================== -->
-    <!-- 3. DASHBOARD MAIN CONTENT                  -->
-    <!-- ========================================== -->
-    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
-
-        <!-- CONTROLS & FILTER BAR -->
-        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row gap-4 justify-between items-center">
-            
-            <!-- Filter Rombel & Hari -->
-            <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
-                <div class="flex items-center gap-2">
-                    <span class="text-xs font-semibold text-slate-500 uppercase">Rombel:</span>
-                    <select id="selectKelas" onchange="renderJadwalTable()" class="bg-slate-50 border border-slate-300 rounded-lg text-sm px-3 py-1.5 font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                        <!-- Dynamic options K7A - K9H -->
-                    </select>
-                </div>
-
-                <div class="flex items-center gap-2">
-                    <span class="text-xs font-semibold text-slate-500 uppercase">Hari:</span>
-                    <select id="selectHari" onchange="renderJadwalTable()" class="bg-slate-50 border border-slate-300 rounded-lg text-sm px-3 py-1.5 font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                        <option value="Senin">Senin (7 Jam)</option>
-                        <option value="Selasa">Selasa (8 Jam)</option>
-                        <option value="Rabu">Rabu (8 Jam)</option>
-                        <option value="Kamis">Kamis (7 Jam)</option>
-                        <option value="Jumat">Jumat (4 Jam)</option>
-                        <option value="Sabtu">Sabtu (5 Jam)</option>
-                    </select>
-                </div>
-            </div>
-
-            <!-- Stats Badge -->
-            <div class="flex items-center gap-4 text-xs font-medium text-slate-600 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200">
-                <div class="flex items-center gap-1.5">
-                    <i data-lucide="users" class="w-4 h-4 text-indigo-600"></i>
-                    <span>Guru: <strong id="totalGuruCount" class="text-slate-800">37</strong></span>
-                </div>
-                <span class="text-slate-300">|</span>
-                <div class="flex items-center gap-1.5">
-                    <i data-lucide="layout-grid" class="w-4 h-4 text-indigo-600"></i>
-                    <span>Rombel: <strong class="text-slate-800">24</strong></span>
-                </div>
-            </div>
-        </div>
-
-        <!-- NOTIFICATION / CONFLICT BANNER -->
-        <div id="conflictAlert" class="hidden bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3">
-            <i data-lucide="alert-triangle" class="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5"></i>
+    <!-- ================= 3. TAB PLOTTING JADWAL ================= -->
+    <main id="tabJadwal" class="flex-1 max-w-7xl w-full mx-auto p-6 space-y-4">
+        <!-- ALERT BENTROK -->
+        <div id="conflictAlert" class="hidden bg-red-50 border border-red-300 rounded-xl p-4 flex items-start gap-3 shadow-md">
+            <i data-lucide="alert-triangle" class="w-6 h-6 text-red-600 flex-shrink-0 mt-0.5"></i>
             <div>
-                <h4 class="text-sm font-semibold text-amber-800">Peringatan Bentrok Jadwal!</h4>
-                <p id="conflictAlertMsg" class="text-xs text-amber-700 mt-0.5"></p>
+                <h4 class="text-sm font-bold text-red-800">PERINGATAN BENTROK JADWAL!</h4>
+                <p id="conflictAlertMsg" class="text-xs text-red-700 mt-1"></p>
             </div>
         </div>
 
-        <!-- MAIN SCHEDULE GRID TABLE -->
-        <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-            <div class="p-4 border-b border-slate-200 bg-slate-50 flex justify-between items-center">
-                <h3 class="font-bold text-slate-700 text-sm flex items-center gap-2">
-                    <i data-lucide="clock" class="w-4 h-4 text-indigo-600"></i>
-                    Plotting Jadwal: <span id="currentTitle" class="text-indigo-600">Kelas 7A - Hari Senin</span>
-                </h3>
-                <span class="text-xs text-slate-400">Durasi Jam @40 Menit</span>
-            </div>
-
-            <div class="overflow-x-auto custom-scrollbar">
-                <table class="w-full text-left border-collapse text-sm">
-                    <thead>
-                        <tr class="bg-slate-100/70 text-slate-600 uppercase text-xs tracking-wider border-b border-slate-200">
-                            <th class="py-3 px-4 w-20 text-center">Jam Ke</th>
-                            <th class="py-3 px-4 w-32">Waktu</th>
-                            <th class="py-3 px-4">Mata Pelajaran</th>
-                            <th class="py-3 px-4">Guru Pengampu</th>
-                            <th class="py-3 px-4 w-24 text-center">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody id="jadwalTableBody" class="divide-y divide-slate-200">
-                        <!-- Dynamic Rows Generated by JS -->
-                    </tbody>
-                </table>
+        <div class="bg-white p-4 rounded-xl border flex flex-wrap justify-between items-center gap-4">
+            <div class="flex items-center gap-4">
+                <div class="flex items-center gap-2">
+                    <span class="text-xs font-semibold text-slate-500">ROMBEL:</span>
+                    <select id="selectKelas" onchange="renderJadwalTable()" class="bg-slate-50 border rounded-lg px-3 py-1.5 text-sm font-medium text-slate-700"></select>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="text-xs font-semibold text-slate-500">HARI:</span>
+                    <select id="selectHari" onchange="renderJadwalTable()" class="bg-slate-50 border rounded-lg px-3 py-1.5 text-sm font-medium text-slate-700">
+                        <option value="Senin">Senin</option><option value="Selasa">Selasa</option>
+                        <option value="Rabu">Rabu</option><option value="Kamis">Kamis</option>
+                        <option value="Jumat">Jumat</option><option value="Sabtu">Sabtu</option>
+                    </select>
+                </div>
             </div>
         </div>
 
+        <div class="bg-white rounded-xl border overflow-hidden shadow-sm">
+            <table class="w-full text-left border-collapse text-sm">
+                <thead>
+                    <tr class="bg-slate-100 text-slate-600 uppercase text-xs border-b">
+                        <th class="py-3 px-4 w-20 text-center">Jam</th>
+                        <th class="py-3 px-4 w-48">Rentang Waktu</th>
+                        <th class="py-3 px-4">Mata Pelajaran</th>
+                        <th class="py-3 px-4">Guru Pengampu</th>
+                        <th class="py-3 px-4 w-20 text-center">Reset</th>
+                    </tr>
+                </thead>
+                <tbody id="jadwalTableBody" class="divide-y divide-slate-200"></tbody>
+            </table>
+        </div>
     </main>
 
-    <!-- LOADING OVERLAY -->
-    <div id="loadingOverlay" class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center">
-        <div class="bg-white p-5 rounded-2xl shadow-xl flex items-center gap-3">
-            <div class="animate-spin text-indigo-600">
-                <i data-lucide="loader-2" class="w-6 h-6"></i>
+    <!-- ================= 4. TAB CRUD DATA GURU ================= -->
+    <main id="tabGuru" class="hidden flex-1 max-w-7xl w-full mx-auto p-6 space-y-4">
+        <div class="flex justify-between items-center bg-white p-4 rounded-xl border">
+            <h3 class="font-bold text-slate-700">Data Master Guru (Total: <span id="guruCount">0</span>)</h3>
+            <button onclick="openGuruModal()" class="bg-indigo-600 text-white px-3 py-1.5 rounded-lg text-sm flex items-center gap-1">
+                <i data-lucide="plus" class="w-4 h-4"></i> Tambah Guru Baru
+            </button>
+        </div>
+        <div class="bg-white rounded-xl border overflow-hidden">
+            <table class="w-full text-left text-sm">
+                <thead class="bg-slate-100 text-xs text-slate-600 uppercase border-b">
+                    <tr>
+                        <th class="p-3">Kode</th>
+                        <th class="p-3">Nama Lengkap & NIP</th>
+                        <th class="p-3">Kompetensi</th>
+                        <th class="p-3 text-center">JJM</th>
+                        <th class="p-3 text-center">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody id="guruTableBody" class="divide-y"></tbody>
+            </table>
+        </div>
+    </main>
+
+    <!-- ================= 5. TAB SETTING RENTANG WAKTU ================= -->
+    <main id="tabWaktu" class="hidden flex-1 max-w-7xl w-full mx-auto p-6 space-y-4">
+        <div class="flex justify-between items-center bg-white p-4 rounded-xl border">
+            <h3 class="font-bold text-slate-700">Pengaturan Jam Pelajaran & Istirahat</h3>
+            <button onclick="addWaktuRow()" class="bg-indigo-600 text-white px-3 py-1.5 rounded-lg text-sm flex items-center gap-1">
+                <i data-lucide="plus" class="w-4 h-4"></i> Tambah Jam
+            </button>
+        </div>
+        <div class="bg-white rounded-xl border p-4">
+            <table class="w-full text-left text-sm">
+                <thead class="bg-slate-100 text-xs text-slate-600 uppercase">
+                    <tr>
+                        <th class="p-2">Hari</th>
+                        <th class="p-2">Jam Ke</th>
+                        <th class="p-2">Rentang Waktu (Bebas Edit)</th>
+                        <th class="p-2 text-center">Istirahat?</th>
+                        <th class="p-2">Keterangan</th>
+                        <th class="p-2">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody id="waktuTableBody" class="divide-y"></tbody>
+            </table>
+            <button onclick="saveWaktuSetting()" class="mt-4 bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-medium">Simpan Perubahan Waktu</button>
+        </div>
+    </main>
+
+    <!-- MODAL FORM EDIT/TAMBAH GURU -->
+    <div id="guruModal" class="hidden fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-xl p-6 max-w-md w-full space-y-4">
+            <h3 class="font-bold text-lg text-slate-800" id="guruModalTitle">Tambah Data Guru</h3>
+            <input type="hidden" id="editGuruId">
+            <div><label class="text-xs font-semibold">Kode Guru</label><input type="text" id="gKode" class="w-full border rounded p-2 text-sm"></div>
+            <div><label class="text-xs font-semibold">Nama Lengkap & Gelar</label><input type="text" id="gNama" class="w-full border rounded p-2 text-sm"></div>
+            <div><label class="text-xs font-semibold">Kompetensi / Mapel</label><input type="text" id="gKomp" class="w-full border rounded p-2 text-sm"></div>
+            <div class="flex gap-2">
+                <div class="w-1/2"><label class="text-xs font-semibold">JJM Mengajar</label><input type="number" id="gJjm" class="w-full border rounded p-2 text-sm" value="0"></div>
+                <div class="w-1/2"><label class="text-xs font-semibold">Total JJM</label><input type="number" id="gTotalJjm" class="w-full border rounded p-2 text-sm" value="0"></div>
             </div>
-            <span class="text-sm font-medium text-slate-700" id="loadingText">Menghubungkan ke server...</span>
+            <div class="flex justify-end gap-2 pt-2">
+                <button onclick="closeGuruModal()" class="px-4 py-2 bg-slate-100 text-sm rounded">Batal</button>
+                <button onclick="saveGuruData()" class="px-4 py-2 bg-indigo-600 text-white text-sm rounded">Simpan</button>
+            </div>
         </div>
     </div>
 
-    <!-- ========================================== -->
-    <!-- 4. JAVASCRIPT APP LOGIC                    -->
-    <!-- ========================================== -->
+    <!-- MODAL VALIDASI DURASI HARIAN -->
+    <div id="durationModal" class="hidden fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl max-w-md w-full p-6 space-y-4 border shadow-2xl">
+            <div class="flex items-center gap-3 text-amber-600">
+                <i data-lucide="clock" class="w-7 h-7"></i>
+                <h3 class="font-bold text-lg text-slate-800">Konfirmasi Rasio Waktu</h3>
+            </div>
+            <p id="durationModalMsg" class="text-sm text-slate-600 leading-relaxed"></p>
+            <div class="flex flex-col gap-2 pt-2">
+                <button onclick="applyAutoDurationSystem()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 rounded-lg text-sm flex items-center justify-center gap-2">
+                    <i data-lucide="wand-2" class="w-4 h-4"></i> Sesuaikan Otomatis By System (40 Menit)
+                </button>
+                <button onclick="confirmCustomDuration()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium py-2 rounded-lg text-sm">
+                    Tetap Lanjutkan Dengan Manual Ini
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT LOGIC -->
     <script>
-        // --- KONFIGURASI GAS ---
-        // GANTI URL INI DENGAN WEB APP URL GOOGLE APPS SCRIPT ANDA
-        const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzt40rceelR0LQ_tS1BFAYx3A65Ctzifxz-VMejooqqRFA6p4Fr0h8_gOiPKnKCeY7y/exec";
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbzt40rceelR0LQ_tS1BFAYx3A65Ctzifxz-VMejooqqRFA6p4Fr0h8_gOiPKnKCeY7y/exec";
 
-        // --- AUTH CONFIG ---
-        const VALID_USER = "kurikulum";
-        const VALID_PASS = "bangsal123";
+        let masterGuru = [], masterKelas = [], masterWaktu = [], stateJadwal = [];
 
-        // --- STATE APLIKASI ---
-        let masterGuru = [];
-        let masterKelas = [];
-        let strukturHari = [];
-        let stateJadwal = []; // Store local schedule items
-
-        // Jadwal waktu standar (40 menit)
-        const KETENTUAN_JAM = {
-            Senin: [
-                { jam: 1, waktu: "07:00 - 07:40" },
-                { jam: 2, waktu: "07:40 - 08:20" },
-                { jam: 3, waktu: "08:20 - 09:00" },
-                { type: "ISTIRAHAT", waktu: "09:00 - 09:20 (20 Menit)" },
-                { jam: 4, waktu: "09:20 - 10:00" },
-                { jam: 5, waktu: "10:00 - 10:40" },
-                { jam: 6, waktu: "10:40 - 11:20" },
-                { type: "ISTIRAHAT", waktu: "11:20 - 12:05 (45 Menit)" },
-                { jam: 7, waktu: "12:05 - 12:45" }
-            ],
-            Selasa: [
-                { jam: 1, waktu: "07:00 - 07:40" }, { jam: 2, waktu: "07:40 - 08:20" }, { jam: 3, waktu: "08:20 - 09:00" },
-                { type: "ISTIRAHAT", waktu: "09:00 - 09:20 (20m)" },
-                { jam: 4, waktu: "09:20 - 10:00" }, { jam: 5, waktu: "10:00 - 10:40" }, { jam: 6, waktu: "10:40 - 11:20" },
-                { type: "ISTIRAHAT", waktu: "11:20 - 12:05 (45m)" },
-                { jam: 7, waktu: "12:05 - 12:45" }, { jam: 8, waktu: "12:45 - 13:25" }
-            ],
-            Rabu: [
-                { jam: 1, waktu: "07:00 - 07:40" }, { jam: 2, waktu: "07:40 - 08:20" }, { jam: 3, waktu: "08:20 - 09:00" },
-                { type: "ISTIRAHAT", waktu: "09:00 - 09:20 (20m)" },
-                { jam: 4, waktu: "09:20 - 10:00" }, { jam: 5, waktu: "10:00 - 10:40" }, { jam: 6, waktu: "10:40 - 11:20" },
-                { type: "ISTIRAHAT", waktu: "11:20 - 12:05 (45m)" },
-                { jam: 7, waktu: "12:05 - 12:45" }, { jam: 8, waktu: "12:45 - 13:25" }
-            ],
-            Kamis: [
-                { jam: 1, waktu: "07:00 - 07:40" }, { jam: 2, waktu: "07:40 - 08:20" }, { jam: 3, waktu: "08:20 - 09:00" },
-                { type: "ISTIRAHAT", waktu: "09:00 - 09:20 (20m)" },
-                { jam: 4, waktu: "09:20 - 10:00" }, { jam: 5, waktu: "10:00 - 10:40" }, { jam: 6, waktu: "10:40 - 11:20" },
-                { type: "ISTIRAHAT", waktu: "11:20 - 12:05 (45m)" },
-                { jam: 7, waktu: "12:05 - 12:45" }
-            ],
-            Jumat: [
-                { jam: 1, waktu: "07:00 - 07:40" }, { jam: 2, waktu: "07:40 - 08:20" },
-                { type: "ISTIRAHAT", waktu: "08:20 - 08:40 (20m)" },
-                { jam: 3, waktu: "08:40 - 09:20" }, { jam: 4, waktu: "09:20 - 10:00" }
-            ],
-            Sabtu: [
-                { jam: 1, waktu: "07:00 - 07:40" }, { jam: 2, waktu: "07:40 - 08:20" }, { jam: 3, waktu: "08:20 - 09:00" },
-                { type: "ISTIRAHAT", waktu: "09:00 - 09:20 (20m)" },
-                { jam: 4, waktu: "09:20 - 10:00" }, { jam: 5, waktu: "10:00 - 10:40" }
-            ]
-        };
-
-        // --- INIT APPLICATION ---
         document.addEventListener("DOMContentLoaded", () => {
             lucide.createIcons();
             checkSession();
         });
 
-        // --- AUTH FUNCTIONS ---
         function checkSession() {
-            const isAuth = sessionStorage.getItem("isLoggedIn");
-            if (isAuth === "true") {
+            const u = sessionStorage.getItem("user");
+            if (u) {
                 document.getElementById("loginSection").classList.add("hidden");
+                document.getElementById("userBadge").innerText = "Pengguna: " + u;
                 loadDataFromGAS();
             } else {
                 document.getElementById("loginSection").classList.remove("hidden");
             }
         }
 
-        function handleLogin(e) {
+        async function handleLogin(e) {
             e.preventDefault();
-            const u = document.getElementById("loginUser").value;
-            const p = document.getElementById("loginPass").value;
+            const username = document.getElementById("loginUser").value;
+            const password = document.getElementById("loginPass").value;
 
-            if (u === VALID_USER && p === VALID_PASS) {
-                sessionStorage.setItem("isLoggedIn", "true");
-                document.getElementById("loginSection").classList.add("hidden");
-                loadDataFromGAS();
-            } else {
-                document.getElementById("loginError").classList.remove("hidden");
+            try {
+                const res = await fetch(GAS_URL, {
+                    method: "POST",
+                    body: JSON.stringify({ action: "login", username, password })
+                }).then(r => r.json());
+
+                if (res.status === "success") {
+                    sessionStorage.setItem("user", res.user.nama);
+                    checkSession();
+                } else {
+                    document.getElementById("loginError").classList.remove("hidden");
+                }
+            } catch (err) {
+                alert("Gagal koneksi ke Google Apps Script!");
             }
         }
 
         function handleLogout() {
-            sessionStorage.removeItem("isLoggedIn");
+            sessionStorage.clear();
             location.reload();
         }
 
-        // --- DATA FETCHING (GAS API) ---
-        async function loadDataFromGAS() {
-            showLoading("Mengambil master data dari Google Sheets...");
-            try {
-                // Panggilan API ke Google Apps Script
-                const response = await fetch(`${GAS_WEB_APP_URL}?action=getAllData`);
-                const result = await response.json();
-
-                if (result.status === "success") {
-                    masterGuru = result.data.guru || [];
-                    masterKelas = result.data.kelas || [];
-                    stateJadwal = result.data.jadwal || [];
-
-                    populateKelasDropdown();
-                    document.getElementById("totalGuruCount").innerText = masterGuru.length;
-                    renderJadwalTable();
-                } else {
-                    alert("Gagal memuat data dari spreadsheet: " + result.message);
-                }
-            } catch (err) {
-                console.warn("Menggunakan Mode Offline/Fallback Mock Data...");
-                setupMockData();
-            } finally {
-                hideLoading();
-            }
+        function switchTab(tab) {
+            ["Jadwal", "Guru", "Waktu"].forEach(t => document.getElementById("tab" + t).classList.add("hidden"));
+            document.getElementById("tab" + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.remove("hidden");
         }
 
-        // --- MOCK DATA FALLBACK (Jika GAS URL belum diisi/salah) ---
-        function setupMockData() {
-            masterKelas = [];
-            ["7", "8", "9"].forEach(t => {
-                ["A", "B", "C", "D", "E", "F", "G", "H"].forEach(h => {
-                    masterKelas.push({ id_kelas: `K_${t}${h}`, nama_kelas: `${t}${h}` });
-                });
-            });
-            masterGuru = [
-                { id_guru: "G01", kode_guru: "AFR", nama_guru: "AFRIZA RACHMAWATI, S.Pd.", kompetensi: "Pendidikan Luar Biasa" },
-                { id_guru: "G02", kode_guru: "ANT", nama_guru: "Anton Dwi Kurniawan, S.Pd.", kompetensi: "Bahasa Indonesia" },
-                { id_guru: "G03", kode_guru: "ARI", nama_guru: "ARIS MUAZIR, S.Pd.I", kompetensi: "Pendidikan Agama Islam" },
-                { id_guru: "G11", kode_guru: "ENY", nama_guru: "Eny Pujiastutik, S.Pd.", kompetensi: "Bahasa Inggris" }
-            ];
-            populateKelasDropdown();
-            renderJadwalTable();
+        async function loadDataFromGAS() {
+            try {
+                const res = await fetch(`${GAS_URL}?action=getAllData`).then(r => r.json());
+                if (res.status === "success") {
+                    masterGuru = res.data.guru || [];
+                    masterKelas = res.data.kelas || [];
+                    masterWaktu = res.data.waktu || [];
+                    stateJadwal = res.data.jadwal || [];
+
+                    populateKelasDropdown();
+                    renderJadwalTable();
+                    renderGuruTable();
+                    renderWaktuTable();
+                }
+            } catch (e) { console.error(e); }
         }
 
         function populateKelasDropdown() {
             const select = document.getElementById("selectKelas");
             select.innerHTML = "";
             masterKelas.forEach(k => {
-                const opt = document.createElement("option");
-                opt.value = k.id_kelas;
-                opt.innerText = `Kelas ${k.nama_kelas}`;
-                select.appendChild(opt);
+                select.innerHTML += `<option value="${k.id_kelas}">Kelas ${k.nama_kelas}</option>`;
             });
         }
 
-        // --- TABLE RENDER LOGIC ---
-        function renderJadwalTable() {
-            const currentKelasId = document.getElementById("selectKelas").value || "K_7A";
-            const currentHari = document.getElementById("selectHari").value || "Senin";
-            
-            const kelasObj = masterKelas.find(k => k.id_kelas === currentKelasId);
-            const namaKelas = kelasObj ? kelasObj.nama_kelas : "7A";
-            
-            document.getElementById("currentTitle").innerText = `Kelas ${namaKelas} - Hari ${currentHari}`;
+        // --- HELPER UNTUK MENGAMBIL STRING WAKTU BEBAS ---
+        function getWaktuString(w) {
+            if (w.waktu_str) return w.waktu_str;
+            let m = w.waktu_mulai || "07:00";
+            let s = w.waktu_selesai || "07:40";
+            if (m.includes("T")) m = cleanTimeFormat(m);
+            if (s.includes("T")) s = cleanTimeFormat(s);
+            return `${m} - ${s}`;
+        }
 
+        function cleanTimeFormat(val) {
+            if (!val) return "00:00";
+            if (typeof val === 'string' && val.includes("T")) {
+                const d = new Date(val);
+                if (!isNaN(d.getTime())) {
+                    const hh = String(d.getHours()).padStart(2, '0');
+                    const mm = String(d.getMinutes()).padStart(2, '0');
+                    return `${hh}:${mm}`;
+                }
+            }
+            return String(val);
+        }
+
+        // --- RENDER TABEL PLOTTING JADWAL ---
+        function renderJadwalTable() {
+            const currentKelas = document.getElementById("selectKelas").value || "K_7A";
+            const currentHari = document.getElementById("selectHari").value || "Senin";
             const tbody = document.getElementById("jadwalTableBody");
             tbody.innerHTML = "";
 
-            const listJam = KETENTUAN_JAM[currentHari] || [];
+            const waktuHari = masterWaktu.filter(w => String(w.hari).toLowerCase() === currentHari.toLowerCase());
 
-            listJam.forEach(item => {
+            waktuHari.forEach(w => {
                 const tr = document.createElement("tr");
+                const isIstirahat = String(w.is_istirahat).toLowerCase() === "true" || w.is_istirahat === true;
+                const rentangWaktuText = getWaktuString(w);
 
-                if (item.type === "ISTIRAHAT") {
-                    tr.className = "bg-slate-100 text-slate-500 font-medium italic text-center text-xs";
-                    tr.innerHTML = `
-                        <td class="py-2 px-4" colspan="5">
-                            <span class="flex items-center justify-center gap-2">
-                                <i data-lucide="coffee" class="w-3.5 h-3.5"></i> ISTIRAHAT (${item.waktu})
-                            </span>
-                        </td>
-                    `;
+                if (isIstirahat) {
+                    tr.className = "bg-amber-50/70 text-amber-700 italic text-center font-medium";
+                    tr.innerHTML = `<td colspan="5" class="py-2.5">ISTIRAHAT (${rentangWaktuText}) ${w.keterangan ? '- ' + w.keterangan : ''}</td>`;
                 } else {
-                    // Temukan entry jadwal jika ada
-                    const existingData = stateJadwal.find(j => 
-                        j.hari === currentHari && 
-                        parseInt(j.jam_ke) === item.jam && 
-                        j.id_kelas === currentKelasId
-                    ) || { nama_mapel: "", id_guru: "" };
-
-                    tr.className = "hover:bg-slate-50/80 transition-colors";
+                    const existing = stateJadwal.find(j => j.hari === currentHari && parseInt(j.jam_ke) === parseInt(w.jam_ke) && j.id_kelas === currentKelas) || { nama_mapel: "", id_guru: "" };
                     tr.innerHTML = `
-                        <td class="py-3 px-4 text-center font-bold text-slate-700 bg-slate-50/50">${item.jam}</td>
-                        <td class="py-3 px-4 text-slate-500 text-xs">${item.waktu}</td>
+                        <td class="py-3 px-4 text-center font-bold bg-slate-50">${w.jam_ke}</td>
+                        <td class="py-3 px-4 text-slate-600 text-xs font-semibold">${rentangWaktuText}</td>
+                        <td class="py-3 px-4"><input type="text" value="${existing.nama_mapel || ''}" placeholder="Pilih mapel..." onchange="updateJadwalLocal('${currentHari}', ${w.jam_ke}, '${currentKelas}', 'mapel', this.value)" class="w-full border rounded p-1.5 text-xs"></td>
                         <td class="py-3 px-4">
-                            <input type="text" value="${existingData.nama_mapel}" 
-                                placeholder="Pilih / ketik mapel..."
-                                onchange="updateJadwalLocal('${currentHari}', ${item.jam}, '${currentKelasId}', 'mapel', this.value)"
-                                class="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1 text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-                        </td>
-                        <td class="py-3 px-4">
-                            <select onchange="updateJadwalLocal('${currentHari}', ${item.jam}, '${currentKelasId}', 'guru', this.value)"
-                                class="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1 text-xs font-medium text-slate-700 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-                                <option value="">-- Pilih Guru Pengampu --</option>
-                                ${masterGuru.map(g => `
-                                    <option value="${g.id_guru}" ${existingData.id_guru === g.id_guru ? 'selected' : ''}>
-                                        ${g.kode_guru} - ${g.nama_guru} (${g.kompetensi || ''})
-                                    </option>
-                                `).join('')}
+                            <select onchange="updateJadwalLocal('${currentHari}', ${w.jam_ke}, '${currentKelas}', 'guru', this.value)" class="w-full border rounded p-1.5 text-xs font-medium">
+                                <option value="">-- Pilih Guru --</option>
+                                ${masterGuru.map(g => `<option value="${g.id_guru}" ${existing.id_guru === g.id_guru ? 'selected' : ''}>${g.kode_guru} -${g.nama_guru}</option>`).join('')}
                             </select>
                         </td>
-                        <td class="py-3 px-4 text-center">
-                            <button onclick="clearSingleRow('${currentHari}', ${item.jam}, '${currentKelasId}')" 
-                                class="text-slate-400 hover:text-red-600 transition-colors" title="Kosongkan">
-                                <i data-lucide="trash-2" class="w-4 h-4"></i>
-                            </button>
-                        </td>
+                        <td class="py-3 px-4 text-center"><button onclick="clearSingleRow('${currentHari}', ${w.jam_ke}, '${currentKelas}')" class="text-slate-400 hover:text-red-600"><i data-lucide="trash-2" class="w-4 h-4"></i></button></td>
                     `;
                 }
                 tbody.appendChild(tr);
             });
-
             lucide.createIcons();
             checkConflicts();
         }
 
-        // --- LOCAL UPDATE & VALIDASI BENTROK ---
         function updateJadwalLocal(hari, jamKe, idKelas, field, value) {
-            let entry = stateJadwal.find(j => j.hari === hari && parseInt(j.jam_ke) === jamKe && j.id_kelas === idKelas);
-
+            let entry = stateJadwal.find(j => j.hari === hari && parseInt(j.jam_ke) === parseInt(jamKe) && j.id_kelas === idKelas);
             if (!entry) {
-                entry = { id_jadwal: `JAD_${hari}_${jamKe}_${idKelas}`, hari: hari, jam_ke: jamKe, id_kelas: idKelas, id_guru: "", nama_mapel: "" };
+                entry = { id_jadwal: `JAD_${hari}_${jamKe}_${idKelas}`, hari, jam_ke: jamKe, id_kelas: idKelas, id_guru: "", nama_mapel: "" };
                 stateJadwal.push(entry);
             }
-
             if (field === 'guru') entry.id_guru = value;
             if (field === 'mapel') entry.nama_mapel = value;
-
             checkConflicts();
         }
 
         function clearSingleRow(hari, jamKe, idKelas) {
-            stateJadwal = stateJadwal.filter(j => !(j.hari === hari && parseInt(j.jam_ke) === jamKe && j.id_kelas === idKelas));
+            stateJadwal = stateJadwal.filter(j => !(j.hari === hari && parseInt(j.jam_ke) === parseInt(jamKe) && j.id_kelas === idKelas));
             renderJadwalTable();
         }
 
-        // Pengecekan real-time bentrok guru mengajar di jam sama
         function checkConflicts() {
             const conflictAlert = document.getElementById("conflictAlert");
             const conflictMsg = document.getElementById("conflictAlertMsg");
             const map = {};
-            let hasConflict = false;
-            let conflictDetail = "";
+            let conflictMsgText = "";
 
             for (const item of stateJadwal) {
                 if (!item.id_guru) continue;
                 const key = `${item.hari}_J${item.jam_ke}_G${item.id_guru}`;
-                
                 if (map[key]) {
-                    hasConflict = true;
                     const g = masterGuru.find(x => x.id_guru === item.id_guru);
-                    const namaG = g ? g.nama_guru : item.id_guru;
-                    conflictDetail = `<strong>${namaG}</strong> bentrok mengajar di 2 kelas berbeda pada hari <strong>${item.hari}</strong> jam ke-<strong>${item.jam_ke}</strong>!`;
+                    conflictMsgText = `Guru <strong>${g ? g.nama_guru : item.id_guru}</strong> bentrok mengajar di kelas lain pada hari <strong>${item.hari}</strong> Jam Ke-<strong>${item.jam_ke}</strong>!`;
                     break;
                 }
                 map[key] = item.id_kelas;
             }
 
-            if (hasConflict) {
-                conflictMsg.innerHTML = conflictDetail;
+            if (conflictMsgText) {
+                conflictMsg.innerHTML = conflictMsgText;
                 conflictAlert.classList.remove("hidden");
             } else {
                 conflictAlert.classList.add("hidden");
             }
         }
 
-        // --- SAVE DATA TO GAS ---
-        async function saveAllJadwalToGAS() {
-            showLoading("Menyimpan seluruh jadwal ke Google Sheets...");
-            try {
-                const response = await fetch(GAS_WEB_APP_URL, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        action: "saveJadwalBatch",
-                        items: stateJadwal
-                    })
-                });
+        // --- CRUD DATA GURU ---
+        function renderGuruTable() {
+            document.getElementById("guruCount").innerText = masterGuru.length;
+            const tbody = document.getElementById("guruTableBody");
+            tbody.innerHTML = masterGuru.map(g => `
+                <tr class="hover:bg-slate-50">
+                    <td class="p-3 font-semibold">${g.kode_guru}</td>
+                    <td class="p-3"><strong>${g.nama_guru}</strong><br><span class="text-xs text-slate-400">NIP: ${g.nip}</span></td>
+                    <td class="p-3">${g.kompetensi}</td>
+                    <td class="p-3 text-center">${g.jjm_mengajar}</td>
+                    <td class="p-3 text-center">
+                        <button onclick="editGuru('${g.id_guru}')" class="text-indigo-600 mr-2"><i data-lucide="edit" class="w-4 h-4 inline"></i></button>
+                        <button onclick="deleteGuru('${g.id_guru}')" class="text-red-600"><i data-lucide="trash-2" class="w-4 h-4 inline"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+            lucide.createIcons();
+        }
 
-                const res = await response.json();
-                if (res.status === "success") {
-                    alert("Berhasil! Semua jadwal berhasil disimpan ke database Google Sheets.");
-                } else if (res.status === "conflict_error") {
-                    alert("Gagal Simpan karena Ada Bentrok:\n\n" + res.errors.join("\n"));
-                } else {
-                    alert("Terjadi kesalahan: " + res.message);
-                }
-            } catch (err) {
-                alert("Gagal terhubung ke Google Apps Script. Pastikan Web App URL sudah diisi dengan benar!");
-            } finally {
-                hideLoading();
+        function openGuruModal() {
+            document.getElementById("editGuruId").value = "";
+            document.getElementById("gKode").value = "";
+            document.getElementById("gNama").value = "";
+            document.getElementById("gKomp").value = "";
+            document.getElementById("gJjm").value = "0";
+            document.getElementById("gTotalJjm").value = "0";
+            document.getElementById("guruModalTitle").innerText = "Tambah Data Guru";
+            document.getElementById("guruModal").classList.remove("hidden");
+        }
+
+        function editGuru(id) {
+            const g = masterGuru.find(x => x.id_guru === id);
+            if (!g) return;
+            document.getElementById("editGuruId").value = g.id_guru;
+            document.getElementById("gKode").value = g.kode_guru;
+            document.getElementById("gNama").value = g.nama_guru;
+            document.getElementById("gKomp").value = g.kompetensi;
+            document.getElementById("gJjm").value = g.jjm_mengajar;
+            document.getElementById("gTotalJjm").value = g.total_jjm;
+            document.getElementById("guruModalTitle").innerText = "Edit Data Guru";
+            document.getElementById("guruModal").classList.remove("hidden");
+        }
+
+        function closeGuruModal() { document.getElementById("guruModal").classList.add("hidden"); }
+
+        async function saveGuruData() {
+            const guruObj = {
+                id_guru: document.getElementById("editGuruId").value,
+                kode_guru: document.getElementById("gKode").value,
+                nama_guru: document.getElementById("gNama").value,
+                kompetensi: document.getElementById("gKomp").value,
+                jjm_mengajar: document.getElementById("gJjm").value,
+                total_jjm: document.getElementById("gTotalJjm").value
+            };
+
+            await fetch(GAS_URL, {
+                method: "POST",
+                body: JSON.stringify({ action: "saveGuru", guru: guruObj })
+            });
+            closeGuruModal();
+            loadDataFromGAS();
+        }
+
+        async function deleteGuru(id_guru) {
+            if (confirm("Hapus data guru ini?")) {
+                await fetch(GAS_URL, {
+                    method: "POST",
+                    body: JSON.stringify({ action: "deleteGuru", id_guru })
+                });
+                loadDataFromGAS();
             }
         }
 
-        // --- UI HELPERS ---
-        function showLoading(msg) {
-            document.getElementById("loadingText").innerText = msg || "Loading...";
-            document.getElementById("loadingOverlay").classList.remove("hidden");
+        // --- SETTING RENTANG WAKTU (INPUT MANUAL) ---
+        function renderWaktuTable() {
+            const tbody = document.getElementById("waktuTableBody");
+            tbody.innerHTML = masterWaktu.map((w, idx) => {
+                const isIstirahat = String(w.is_istirahat).toLowerCase() === "true" || w.is_istirahat === true;
+                const waktuVal = getWaktuString(w);
+                return `
+                    <tr class="hover:bg-slate-50">
+                        <td class="p-2"><input type="text" value="${w.hari}" class="w-24 border p-1 rounded text-xs" onchange="masterWaktu[${idx}].hari=this.value"></td>
+                        <td class="p-2"><input type="number" value="${w.jam_ke}" class="w-16 border p-1 rounded text-xs text-center font-bold" onchange="masterWaktu[${idx}].jam_ke=this.value"></td>
+                        <td class="p-2"><input type="text" value="${waktuVal}" placeholder="Contoh: 07:00 - 07:45" class="w-48 border p-1 rounded text-xs font-semibold" onchange="updateWaktuString(${idx}, this.value)"></td>
+                        <td class="p-2 text-center"><input type="checkbox" ${isIstirahat ? 'checked' : ''} onchange="masterWaktu[${idx}].is_istirahat=this.checked; renderWaktuTable();"></td>
+                        <td class="p-2"><input type="text" value="${w.keterangan || ''}" placeholder="Ket..." class="w-32 border p-1 rounded text-xs" onchange="masterWaktu[${idx}].keterangan=this.value"></td>
+                        <td class="p-2"><button onclick="masterWaktu.splice(${idx},1);renderWaktuTable()" class="text-red-600 hover:bg-red-50 p-1 rounded"><i data-lucide="trash" class="w-4 h-4"></i></button></td>
+                    </tr>
+                `;
+            }).join('');
+            lucide.createIcons();
         }
 
-        function hideLoading() {
-            document.getElementById("loadingOverlay").classList.add("hidden");
+        function updateWaktuString(idx, val) {
+            masterWaktu[idx].waktu_str = val;
+            const parts = val.split("-").map(s => s.trim());
+            if (parts.length === 2) {
+                masterWaktu[idx].waktu_mulai = parts[0];
+                masterWaktu[idx].waktu_selesai = parts[1];
+            }
+        }
+
+        function addWaktuRow() {
+            masterWaktu.push({ hari: "Senin", jam_ke: masterWaktu.length + 1, waktu_mulai: "07:00", waktu_selesai: "07:40", waktu_str: "07:00 - 07:40", is_istirahat: false, keterangan: "" });
+            renderWaktuTable();
+        }
+
+        function saveWaktuSetting() {
+            let non40MinList = [];
+
+            masterWaktu.forEach((w) => {
+                const isIstirahat = String(w.is_istirahat).toLowerCase() === "true" || w.is_istirahat === true;
+                if (!isIstirahat) {
+                    const range = getWaktuString(w);
+                    const parts = range.split("-").map(s => s.trim());
+                    if (parts.length === 2) {
+                        const m1 = timeToMinutes(parts[0]);
+                        const m2 = timeToMinutes(parts[1]);
+                        const diff = m2 - m1;
+                        if (diff !== 40 && diff > 0) {
+                            non40MinList.push(`Hari <strong>${w.hari}</strong> Jam Ke-<strong>${w.jam_ke}</strong> (${diff} menit)`);
+                        }
+                    }
+                }
+            });
+
+            if (non40MinList.length > 0) {
+                document.getElementById("durationModalMsg").innerHTML = 
+                    `Terdapat rentang waktu yang durasinya tidak <strong>40 menit</strong>:<br><ul class="list-disc pl-5 my-2 text-xs font-semibold text-slate-700">${non40MinList.map(item => `<li>${item}</li>`).join('')}</ul>Apakah ingin diubah otomatis menjadi 40 menit by system, atau tetap menggunakan angka manual ini?`;
+                document.getElementById("durationModal").classList.remove("hidden");
+            } else {
+                executeSaveWaktu();
+            }
+        }
+
+        function applyAutoDurationSystem() {
+            masterWaktu.forEach((w) => {
+                const isIstirahat = String(w.is_istirahat).toLowerCase() === "true" || w.is_istirahat === true;
+                if (!isIstirahat) {
+                    const range = getWaktuString(w);
+                    const parts = range.split("-").map(s => s.trim());
+                    if (parts.length === 2) {
+                        const m1 = timeToMinutes(parts[0]);
+                        const m2 = m1 + 40;
+                        w.waktu_mulai = minutesToTime(m1);
+                        w.waktu_selesai = minutesToTime(m2);
+                        w.waktu_str = `${w.waktu_mulai} - ${w.waktu_selesai}`;
+                    }
+                }
+            });
+            document.getElementById("durationModal").classList.add("hidden");
+            renderWaktuTable();
+            executeSaveWaktu();
+        }
+
+        function confirmCustomDuration() {
+            document.getElementById("durationModal").classList.add("hidden");
+            executeSaveWaktu();
+        }
+
+        async function executeSaveWaktu() {
+            const payload = masterWaktu.map(w => {
+                const range = getWaktuString(w);
+                const parts = range.split("-").map(s => s.trim());
+                return {
+                    hari: w.hari,
+                    jam_ke: w.jam_ke,
+                    waktu_mulai: parts[0] || w.waktu_mulai || "07:00",
+                    waktu_selesai: parts[1] || w.waktu_selesai || "07:40",
+                    is_istirahat: String(w.is_istirahat).toLowerCase() === "true" || w.is_istirahat === true,
+                    keterangan: w.keterangan || ""
+                };
+            });
+
+            await fetch(GAS_URL, {
+                method: "POST",
+                body: JSON.stringify({ action: "saveWaktuSetting", waktuList: payload })
+            });
+            alert("Pengaturan rentang waktu disimpan!");
+            loadDataFromGAS();
+        }
+
+        async function saveAllJadwalToGAS() {
+            await fetch(GAS_URL, {
+                method: "POST",
+                body: JSON.stringify({ action: "saveJadwalBatch", items: stateJadwal })
+            });
+            alert("Jadwal pelajaran berhasil disimpan ke Google Sheets!");
+        }
+
+        function timeToMinutes(timeStr) {
+            if (!timeStr) return 0;
+            const cleanStr = timeStr.replace('.', ':');
+            const [h, m] = cleanStr.split(':').map(Number);
+            return (h || 0) * 60 + (m || 0);
+        }
+
+        function minutesToTime(mins) {
+            const h = Math.floor(mins / 60) % 24;
+            const m = mins % 60;
+            return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
         }
     </script>
 </body>
