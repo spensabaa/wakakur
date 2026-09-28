@@ -34,7 +34,7 @@
                 <div id="loginError" class="hidden text-xs text-red-600 bg-red-50 p-2.5 rounded-lg border border-red-200">
                     Username atau password salah!
                 </div>
-                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 rounded-lg shadow transition flex items-center justify-center gap-2">
+                <button type="submit" id="btnLoginSubmit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 rounded-lg shadow transition flex items-center justify-center gap-2">
                     <i data-lucide="log-in" class="w-4 h-4"></i> Masuk Aplikasi
                 </button>
             </form>
@@ -65,7 +65,6 @@
 
     <!-- ================= 3. TAB PLOTTING JADWAL ================= -->
     <main id="tabJadwal" class="flex-1 max-w-7xl w-full mx-auto p-6 space-y-4">
-        <!-- ALERT BENTROK -->
         <div id="conflictAlert" class="hidden bg-red-50 border border-red-300 rounded-xl p-4 flex items-start gap-3 shadow-md">
             <i data-lucide="alert-triangle" class="w-6 h-6 text-red-600 flex-shrink-0 mt-0.5"></i>
             <div>
@@ -188,10 +187,8 @@
                 <input type="number" id="gJjm" onchange="calculateTotalJJM()" class="w-full border rounded p-2 text-sm font-bold text-indigo-600" value="0">
             </div>
 
-            <!-- SECTION TUGAS TAMBAHAN -->
             <div class="border-t pt-3 space-y-2">
                 <label class="text-xs font-bold text-slate-700 block">Tugas Tambahan (Pemenuhan Jam DAPODIK)</label>
-                
                 <div>
                     <label class="text-xs text-slate-500">1. Tugas Utama / Melekat (Pilih Maks. 1):</label>
                     <select id="gTugasUtama" onchange="calculateTotalJJM()" class="w-full border rounded p-2 text-sm">
@@ -233,7 +230,6 @@
                 </div>
             </div>
 
-            <!-- TOTAL AKHIR -->
             <div class="bg-indigo-50 p-3 rounded-lg flex justify-between items-center border border-indigo-100">
                 <span class="text-xs font-bold text-indigo-900">Total Akumulasi Beban Kerja:</span>
                 <span id="gTotalCalc" class="text-base font-extrabold text-indigo-600">0 JP / Minggu</span>
@@ -246,8 +242,11 @@
         </div>
     </div>
 
-    <!-- JAVASCRIPT LOGIC -->
+    <!-- JAVASCRIPT LOGIC & KONEKSI BACKEND -->
     <script>
+        // URL WEB APP GOOGLE APPS SCRIPT
+        const GAS_API_URL = "https://script.google.com/macros/s/AKfycbyo5IdnXS9z-6rSoxWF1yJjQustaqWV112LpBdvp1Ex36o0HnjPmUluaO8iXOjHcxuG/exec";
+
         const LIST_HARI = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
         let masterGuru = [], masterKelas = [], masterWaktu = [], stateJadwal = [];
 
@@ -255,6 +254,41 @@
             lucide.createIcons();
             checkSession();
         });
+
+        // ===================================================
+        // HELPER FUNGSI KONEKSI API FETCH DENGAN BACKEND GAS
+        // ===================================================
+        async function sendToGAS(payload) {
+            showLoading(true);
+            try {
+                // Mengirim request POST dengan JSON body
+                const response = await fetch(GAS_API_URL, {
+                    method: "POST",
+                    headers: { "Content-Type": "text/plain;charset=utf-8" },
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json();
+                showLoading(false);
+                return result;
+            } catch (err) {
+                showLoading(false);
+                console.error("API Error:", err);
+                alert("Terjadi kesalahan koneksi ke server Apps Script!");
+                return { status: "error", message: err.toString() };
+            }
+        }
+
+        function showLoading(isShowing) {
+            let loader = document.getElementById("globalLoader");
+            if (!loader) {
+                loader = document.createElement("div");
+                loader.id = "globalLoader";
+                loader.className = "fixed top-4 right-4 bg-indigo-600 text-white px-4 py-2 rounded-lg shadow-lg text-xs font-semibold z-50 flex items-center gap-2";
+                loader.innerHTML = `<span class="animate-spin">⏳</span> Memproses Data...`;
+                document.body.appendChild(loader);
+            }
+            loader.style.display = isShowing ? "flex" : "none";
+        }
 
         function checkSession() {
             const u = sessionStorage.getItem("user");
@@ -267,21 +301,18 @@
             }
         }
 
-        function handleLogin(e) {
+        async function handleLogin(e) {
             e.preventDefault();
             const username = document.getElementById("loginUser").value;
             const password = document.getElementById("loginPass").value;
 
-            google.script.run
-                .withSuccessHandler(res => {
-                    if (res.status === "success") {
-                        sessionStorage.setItem("user", res.user.nama);
-                        checkSession();
-                    } else {
-                        document.getElementById("loginError").classList.remove("hidden");
-                    }
-                })
-                .handleLogin(username, password);
+            const res = await sendToGAS({ action: "login", username, password });
+            if (res && res.status === "success") {
+                sessionStorage.setItem("user", res.user.nama);
+                checkSession();
+            } else {
+                document.getElementById("loginError").classList.remove("hidden");
+            }
         }
 
         function handleLogout() {
@@ -294,23 +325,36 @@
             document.getElementById("tab" + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.remove("hidden");
         }
 
-        function loadDataFromGAS() {
-            google.script.run
-                .withSuccessHandler(res => {
-                    if (res.status === "success") {
-                        masterGuru = res.data.guru || [];
-                        masterKelas = res.data.kelas || [];
-                        masterWaktu = res.data.waktu || [];
-                        stateJadwal = res.data.jadwal || [];
+        async function loadDataFromGAS() {
+            showLoading(true);
+            try {
+                // Request GET data spreadsheet
+                const response = await fetch(GAS_API_URL + "?action=getAllData");
+                let res;
+                if (response.ok) {
+                    res = await response.json();
+                } else {
+                    // Fallback ke POST jika GET di-restrict
+                    res = await sendToGAS({ action: "getAllData" });
+                }
+                
+                showLoading(false);
+                if (res && res.status === "success") {
+                    masterGuru = res.data.guru || [];
+                    masterKelas = res.data.kelas || [];
+                    masterWaktu = res.data.waktu || [];
+                    stateJadwal = res.data.jadwal || [];
 
-                        populateKelasDropdown();
-                        populateHariDropdown();
-                        renderJadwalTable();
-                        renderGuruTable();
-                        renderWaktuTable();
-                    }
-                })
-                .getAllData();
+                    populateKelasDropdown();
+                    populateHariDropdown();
+                    renderJadwalTable();
+                    renderGuruTable();
+                    renderWaktuTable();
+                }
+            } catch (err) {
+                showLoading(false);
+                console.error("Load Data Error:", err);
+            }
         }
 
         function populateKelasDropdown() {
@@ -341,7 +385,7 @@
             return (h || 0) * 60 + (m || 0);
         }
 
-        // --- RENDER TABEL PLOTTING JADWAL ---
+        // --- TAB PLOTTING JADWAL ---
         function renderJadwalTable() {
             const currentKelas = document.getElementById("selectKelas").value || (masterKelas[0] ? masterKelas[0].id_kelas : "K_7A");
             const currentHari = document.getElementById("selectHari").value || "Senin";
@@ -431,7 +475,7 @@
             }
         }
 
-        // --- RENDER TABEL GURU & TUGAS TAMBAHAN ---
+        // --- TAB DATA GURU & TUGAS TAMBAHAN ---
         function renderGuruTable() {
             document.getElementById("statGuruCount").innerText = masterGuru.length;
             const tbody = document.getElementById("guruTableBody");
@@ -532,7 +576,7 @@
 
         function closeGuruModal() { document.getElementById("guruModal").classList.add("hidden"); }
 
-        function saveGuruData() {
+        async function saveGuruData() {
             const { totalJP, totalEkivalensi } = calculateTotalJJM();
 
             const activeList = [];
@@ -554,19 +598,21 @@
                 total_jjm: totalJP
             };
 
-            google.script.run
-                .withSuccessHandler(res => {
-                    closeGuruModal();
-                    loadDataFromGAS();
-                })
-                .saveGuru(guruObj);
+            const res = await sendToGAS({ action: "saveGuru", guru: guruObj });
+            if (res && res.status === "success") {
+                closeGuruModal();
+                alert(res.message || "Data guru berhasil disimpan!");
+                loadDataFromGAS();
+            }
         }
 
-        function deleteGuru(id_guru) {
+        async function deleteGuru(id_guru) {
             if (confirm("Hapus data guru ini?")) {
-                google.script.run
-                    .withSuccessHandler(res => loadDataFromGAS())
-                    .deleteGuru(id_guru);
+                const res = await sendToGAS({ action: "deleteGuru", id_guru });
+                if (res && res.status === "success") {
+                    alert(res.message || "Data guru dihapus!");
+                    loadDataFromGAS();
+                }
             }
         }
 
@@ -603,19 +649,19 @@
             renderWaktuTable();
         }
 
-        function saveWaktuSetting() {
-            google.script.run
-                .withSuccessHandler(res => {
-                    alert("Pengaturan rentang waktu berhasil disimpan!");
-                    loadDataFromGAS();
-                })
-                .saveWaktuSetting(masterWaktu);
+        async function saveWaktuSetting() {
+            const res = await sendToGAS({ action: "saveWaktuSetting", waktuList: masterWaktu });
+            if (res && res.status === "success") {
+                alert("Pengaturan rentang waktu berhasil disimpan!");
+                loadDataFromGAS();
+            }
         }
 
-        function saveAllJadwalToGAS() {
-            google.script.run
-                .withSuccessHandler(res => alert("Jadwal pelajaran berhasil disimpan ke Google Sheets!"))
-                .saveJadwalBatch(stateJadwal);
+        async function saveAllJadwalToGAS() {
+            const res = await sendToGAS({ action: "saveJadwalBatch", items: stateJadwal });
+            if (res && res.status === "success") {
+                alert("Jadwal pelajaran berhasil disimpan ke Google Sheets!");
+            }
         }
     </script>
 </body>
