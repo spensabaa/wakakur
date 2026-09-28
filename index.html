@@ -56,7 +56,7 @@
                 <button onclick="switchTab('guru')" class="px-3 py-1.5 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100">Data Guru</button>
                 <button onclick="switchTab('waktu')" class="px-3 py-1.5 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100">Setting Waktu</button>
                 <button onclick="saveAllJadwalToGAS()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg text-sm font-medium flex items-center gap-1 shadow-sm">
-                    <i data-lucide="save" class="w-4 h-4"></i> Simpan
+                    <i data-lucide="save" class="w-4 h-4"></i> Simpan ke Sheet
                 </button>
                 <button onclick="handleLogout()" class="bg-slate-100 p-2 rounded-lg text-slate-600 hover:bg-slate-200"><i data-lucide="log-out" class="w-4 h-4"></i></button>
             </div>
@@ -82,24 +82,31 @@
                 </div>
                 <div class="flex items-center gap-2">
                     <span class="text-xs font-semibold text-slate-500">HARI:</span>
-                    <select id="selectHari" onchange="renderJadwalTable()" class="bg-slate-50 border rounded-lg px-3 py-1.5 text-sm font-medium text-slate-700">
-                        <option value="Senin">Senin</option><option value="Selasa">Selasa</option>
-                        <option value="Rabu">Rabu</option><option value="Kamis">Kamis</option>
-                        <option value="Jumat">Jumat</option><option value="Sabtu">Sabtu</option>
-                    </select>
+                    <select id="selectHari" onchange="renderJadwalTable()" class="bg-slate-50 border rounded-lg px-3 py-1.5 text-sm font-medium text-slate-700"></select>
                 </div>
+            </div>
+            <div class="flex items-center gap-3 text-xs font-medium text-slate-500">
+                <span class="bg-slate-100 px-2.5 py-1 rounded-md"><i data-lucide="users" class="w-3.5 h-3.5 inline mr-1"></i>Guru: <strong id="statGuruCount" class="text-slate-700">0</strong></span>
+                <span class="bg-slate-100 px-2.5 py-1 rounded-md"><i data-lucide="layout-grid" class="w-3.5 h-3.5 inline mr-1"></i>Rombel: <strong id="statRombelCount" class="text-slate-700">0</strong></span>
             </div>
         </div>
 
         <div class="bg-white rounded-xl border overflow-hidden shadow-sm">
+            <div class="p-3 bg-slate-50 border-b flex justify-between items-center">
+                <h3 class="text-sm font-bold text-slate-700 flex items-center gap-2">
+                    <i data-lucide="clock" class="w-4 h-4 text-indigo-600"></i>
+                    Plotting Jadwal: <span id="labelKelasHari" class="text-indigo-600">Kelas - Hari</span>
+                </h3>
+                <span class="text-xs text-slate-400 font-medium">Durasi Jam @40 Menit</span>
+            </div>
             <table class="w-full text-left border-collapse text-sm">
                 <thead>
                     <tr class="bg-slate-100 text-slate-600 uppercase text-xs border-b">
-                        <th class="py-3 px-4 w-20 text-center">Jam</th>
-                        <th class="py-3 px-4 w-48">Rentang Waktu</th>
-                        <th class="py-3 px-4">Mata Pelajaran</th>
-                        <th class="py-3 px-4">Guru Pengampu</th>
-                        <th class="py-3 px-4 w-20 text-center">Reset</th>
+                        <th class="py-3 px-4 w-20 text-center">JAM KE</th>
+                        <th class="py-3 px-4 w-48">WAKTU</th>
+                        <th class="py-3 px-4">MATA PELAJARAN</th>
+                        <th class="py-3 px-4">GURU PENGAMPU</th>
+                        <th class="py-3 px-4 w-20 text-center">AKSI</th>
                     </tr>
                 </thead>
                 <tbody id="jadwalTableBody" class="divide-y divide-slate-200"></tbody>
@@ -145,7 +152,7 @@
                     <tr>
                         <th class="p-2">Hari</th>
                         <th class="p-2">Jam Ke</th>
-                        <th class="p-2">Rentang Waktu (Bebas Edit)</th>
+                        <th class="p-2">Rentang Waktu (Bebas Edit Manual)</th>
                         <th class="p-2 text-center">Istirahat?</th>
                         <th class="p-2">Keterangan</th>
                         <th class="p-2">Aksi</th>
@@ -176,7 +183,7 @@
         </div>
     </div>
 
-    <!-- MODAL VALIDASI DURASI HARIAN -->
+    <!-- MODAL VALIDASI DURASI 40 MENIT -->
     <div id="durationModal" class="hidden fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-xl max-w-md w-full p-6 space-y-4 border shadow-2xl">
             <div class="flex items-center gap-3 text-amber-600">
@@ -186,7 +193,7 @@
             <p id="durationModalMsg" class="text-sm text-slate-600 leading-relaxed"></p>
             <div class="flex flex-col gap-2 pt-2">
                 <button onclick="applyAutoDurationSystem()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 rounded-lg text-sm flex items-center justify-center gap-2">
-                    <i data-lucide="wand-2" class="w-4 h-4"></i> Sesuaikan Otomatis By System (40 Menit)
+                    <i data-lucide="wand-2" class="w-4 h-4"></i> Ubah Otomatis By System (40 Menit)
                 </button>
                 <button onclick="confirmCustomDuration()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium py-2 rounded-lg text-sm">
                     Tetap Lanjutkan Dengan Manual Ini
@@ -199,6 +206,7 @@
     <script>
         const GAS_URL = "https://script.google.com/macros/s/AKfycbzt40rceelR0LQ_tS1BFAYx3A65Ctzifxz-VMejooqqRFA6p4Fr0h8_gOiPKnKCeY7y/exec";
 
+        const LIST_HARI = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
         let masterGuru = [], masterKelas = [], masterWaktu = [], stateJadwal = [];
 
         document.addEventListener("DOMContentLoaded", () => {
@@ -258,12 +266,54 @@
                     masterWaktu = res.data.waktu || [];
                     stateJadwal = res.data.jadwal || [];
 
+                    ensureFullWaktuData();
                     populateKelasDropdown();
+                    populateHariDropdown();
                     renderJadwalTable();
                     renderGuruTable();
                     renderWaktuTable();
                 }
             } catch (e) { console.error(e); }
+        }
+
+        // --- MEMASTIKAN HARI SENIN-SABTU MEMILIKI JAM BAWAAN JIKA KOSONG ---
+        function ensureFullWaktuData() {
+            const defaultHours = {
+                "Senin": 7, "Selasa": 8, "Rabu": 8, "Kamis": 7, "Jumat": 4, "Sabtu": 5
+            };
+
+            LIST_HARI.forEach(hari => {
+                const existing = masterWaktu.filter(w => String(w.hari).toLowerCase() === hari.toLowerCase());
+                if (existing.length === 0) {
+                    const count = defaultHours[hari] || 7;
+                    let startMin = 420; // 07:00 AM
+                    for (let j = 1; j <= count; j++) {
+                        let endMin = startMin + 40;
+                        masterWaktu.push({
+                            hari: hari,
+                            jam_ke: j,
+                            waktu_mulai: minutesToTime(startMin),
+                            waktu_selesai: minutesToTime(endMin),
+                            waktu_str: `${minutesToTime(startMin)} - ${minutesToTime(endMin)}`,
+                            is_istirahat: false,
+                            keterangan: ""
+                        });
+                        startMin = endMin;
+                        if (j === 3 && hari !== "Jumat") {
+                            masterWaktu.push({
+                                hari: hari,
+                                jam_ke: j,
+                                waktu_mulai: minutesToTime(startMin),
+                                waktu_selesai: minutesToTime(startMin + 20),
+                                waktu_str: `${minutesToTime(startMin)} - ${minutesToTime(startMin + 20)}`,
+                                is_istirahat: true,
+                                keterangan: "Istirahat Pertama"
+                            });
+                            startMin += 20;
+                        }
+                    }
+                }
+            });
         }
 
         function populateKelasDropdown() {
@@ -272,9 +322,22 @@
             masterKelas.forEach(k => {
                 select.innerHTML += `<option value="${k.id_kelas}">Kelas ${k.nama_kelas}</option>`;
             });
+            document.getElementById("statRombelCount").innerText = masterKelas.length;
         }
 
-        // --- HELPER UNTUK MENGAMBIL STRING WAKTU BEBAS ---
+        function populateHariDropdown() {
+            const select = document.getElementById("selectHari");
+            select.innerHTML = "";
+            
+            LIST_HARI.forEach(hari => {
+                const count = masterWaktu.filter(w => 
+                    String(w.hari).toLowerCase() === hari.toLowerCase() && 
+                    !(String(w.is_istirahat).toLowerCase() === "true" || w.is_istirahat === true)
+                ).length;
+                select.innerHTML += `<option value="${hari}">${hari} (${count} Jam)</option>`;
+            });
+        }
+
         function getWaktuString(w) {
             if (w.waktu_str) return w.waktu_str;
             let m = w.waktu_mulai || "07:00";
@@ -299,12 +362,21 @@
 
         // --- RENDER TABEL PLOTTING JADWAL ---
         function renderJadwalTable() {
-            const currentKelas = document.getElementById("selectKelas").value || "K_7A";
+            const currentKelas = document.getElementById("selectKelas").value || (masterKelas[0] ? masterKelas[0].id_kelas : "K_7A");
             const currentHari = document.getElementById("selectHari").value || "Senin";
+            
+            const kelasObj = masterKelas.find(k => k.id_kelas === currentKelas);
+            document.getElementById("labelKelasHari").innerText = `Kelas ${kelasObj ? kelasObj.nama_kelas : currentKelas} - Hari ${currentHari}`;
+
             const tbody = document.getElementById("jadwalTableBody");
             tbody.innerHTML = "";
 
             const waktuHari = masterWaktu.filter(w => String(w.hari).toLowerCase() === currentHari.toLowerCase());
+
+            if (waktuHari.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="text-center py-6 text-slate-400">Belum ada pengaturan waktu untuk hari ${currentHari}.Silakan atur di Tab Setting Waktu.</td></tr>`;
+                return;
+            }
 
             waktuHari.forEach(w => {
                 const tr = document.createElement("tr");
@@ -313,20 +385,20 @@
 
                 if (isIstirahat) {
                     tr.className = "bg-amber-50/70 text-amber-700 italic text-center font-medium";
-                    tr.innerHTML = `<td colspan="5" class="py-2.5">ISTIRAHAT (${rentangWaktuText}) ${w.keterangan ? '- ' + w.keterangan : ''}</td>`;
+                    tr.innerHTML = `<td colspan="5" class="py-2.5"><i data-lucide="coffee" class="w-4 h-4 inline mr-1"></i> ISTIRAHAT (${rentangWaktuText}) ${w.keterangan ? '- ' + w.keterangan : ''}</td>`;
                 } else {
                     const existing = stateJadwal.find(j => j.hari === currentHari && parseInt(j.jam_ke) === parseInt(w.jam_ke) && j.id_kelas === currentKelas) || { nama_mapel: "", id_guru: "" };
                     tr.innerHTML = `
                         <td class="py-3 px-4 text-center font-bold bg-slate-50">${w.jam_ke}</td>
                         <td class="py-3 px-4 text-slate-600 text-xs font-semibold">${rentangWaktuText}</td>
-                        <td class="py-3 px-4"><input type="text" value="${existing.nama_mapel || ''}" placeholder="Pilih mapel..." onchange="updateJadwalLocal('${currentHari}', ${w.jam_ke}, '${currentKelas}', 'mapel', this.value)" class="w-full border rounded p-1.5 text-xs"></td>
+                        <td class="py-3 px-4"><input type="text" value="${existing.nama_mapel || ''}" placeholder="Pilih / ketik mapel..." onchange="updateJadwalLocal('${currentHari}', ${w.jam_ke}, '${currentKelas}', 'mapel', this.value)" class="w-full border rounded-lg px-3 py-1.5 text-xs outline-none focus:ring-1 focus:ring-indigo-500"></td>
                         <td class="py-3 px-4">
-                            <select onchange="updateJadwalLocal('${currentHari}', ${w.jam_ke}, '${currentKelas}', 'guru', this.value)" class="w-full border rounded p-1.5 text-xs font-medium">
-                                <option value="">-- Pilih Guru --</option>
+                            <select onchange="updateJadwalLocal('${currentHari}', ${w.jam_ke}, '${currentKelas}', 'guru', this.value)" class="w-full border rounded-lg px-3 py-1.5 text-xs font-medium outline-none focus:ring-1 focus:ring-indigo-500">
+                                <option value="">-- Pilih Guru Pengampu --</option>
                                 ${masterGuru.map(g => `<option value="${g.id_guru}" ${existing.id_guru === g.id_guru ? 'selected' : ''}>${g.kode_guru} -${g.nama_guru}</option>`).join('')}
                             </select>
                         </td>
-                        <td class="py-3 px-4 text-center"><button onclick="clearSingleRow('${currentHari}', ${w.jam_ke}, '${currentKelas}')" class="text-slate-400 hover:text-red-600"><i data-lucide="trash-2" class="w-4 h-4"></i></button></td>
+                        <td class="py-3 px-4 text-center"><button onclick="clearSingleRow('${currentHari}', ${w.jam_ke}, '${currentKelas}')" class="text-slate-400 hover:text-red-600 transition"><i data-lucide="trash-2" class="w-4 h-4"></i></button></td>
                     `;
                 }
                 tbody.appendChild(tr);
@@ -379,11 +451,12 @@
         // --- CRUD DATA GURU ---
         function renderGuruTable() {
             document.getElementById("guruCount").innerText = masterGuru.length;
+            document.getElementById("statGuruCount").innerText = masterGuru.length;
             const tbody = document.getElementById("guruTableBody");
             tbody.innerHTML = masterGuru.map(g => `
                 <tr class="hover:bg-slate-50">
                     <td class="p-3 font-semibold">${g.kode_guru}</td>
-                    <td class="p-3"><strong>${g.nama_guru}</strong><br><span class="text-xs text-slate-400">NIP: ${g.nip}</span></td>
+                    <td class="p-3"><strong>${g.nama_guru}</strong><br><span class="text-xs text-slate-400">NIP: ${g.nip || '-'}</span></td>
                     <td class="p-3">${g.kompetensi}</td>
                     <td class="p-3 text-center">${g.jjm_mengajar}</td>
                     <td class="p-3 text-center">
@@ -554,7 +627,7 @@
                 method: "POST",
                 body: JSON.stringify({ action: "saveWaktuSetting", waktuList: payload })
             });
-            alert("Pengaturan rentang waktu disimpan!");
+            alert("Pengaturan rentang waktu berhasil disimpan!");
             loadDataFromGAS();
         }
 
