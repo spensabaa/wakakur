@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Time Table - SMPN 1 Bangsal</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background-color: #cbd5e1;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased min-h-screen flex flex-col">
+
+    <!-- ========================================== -->
+    <!-- 1. HALAMAN LOGIN                           -->
+    <!-- ========================================== -->
+    <div id="loginSection" class="fixed inset-0 bg-slate-900 bg-opacity-95 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full border border-slate-100 relative">
+            <div class="text-center mb-6">
+                <div class="bg-indigo-100 text-indigo-600 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3 shadow-inner">
+                    <i data-lucide="calendar" class="w-8 h-8"></i>
+                </div>
+                <h2 class="text-2xl font-bold text-slate-800">SIM Jadwal Pelajaran</h2>
+                <p class="text-sm text-slate-500 mt-1">SMP Negeri 1 Bangsal</p>
+            </div>
+
+            <form id="loginForm" class="space-y-4" onsubmit="handleLogin(event)">
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">Username</label>
+                    <div class="relative">
+                        <i data-lucide="user" class="w-5 h-5 absolute left-3 top-2.5 text-slate-400"></i>
+                        <input type="text" id="loginUser" required placeholder="Masukkan username" 
+                            class="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">Password</label>
+                    <div class="relative">
+                        <i data-lucide="lock" class="w-5 h-5 absolute left-3 top-2.5 text-slate-400"></i>
+                        <input type="password" id="loginPass" required placeholder="Masukkan password" 
+                            class="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                    </div>
+                </div>
+
+                <div id="loginError" class="hidden text-xs text-red-600 bg-red-50 p-2.5 rounded-lg border border-red-200">
+                    Username atau password salah!
+                </div>
+
+                <button type="submit" 
+                    class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 rounded-lg shadow-md transition-all flex items-center justify-center gap-2">
+                    <i data-lucide="log-in" class="w-4 h-4"></i> Masuk Aplikasi
+                </button>
+            </form>
+            <div class="mt-6 text-center text-xs text-slate-400">
+                Akses Khusus Tim Kurikulum & Manajemen Sekolah
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- 2. NAVBAR & HEADER                         -->
+    <!-- ========================================== -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="bg-indigo-600 text-white p-2 rounded-lg">
+                    <i data-lucide="grid" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-slate-800 text-base leading-tight">TimeTable SMPN 1 Bangsal</h1>
+                    <p class="text-xs text-slate-500">Aplikasi Penyusunan Jadwal Mengajar</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <button onclick="saveAllJadwalToGAS()" id="btnSave" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 shadow-sm transition-all">
+                    <i data-lucide="save" class="w-4 h-4"></i> Simpan ke Sheet
+                </button>
+                <button onclick="handleLogout()" class="bg-slate-100 hover:bg-slate-200 text-slate-600 p-2 rounded-lg text-sm transition-all" title="Keluar">
+                    <i data-lucide="log-out" class="w-4 h-4"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- ========================================== -->
+    <!-- 3. DASHBOARD MAIN CONTENT                  -->
+    <!-- ========================================== -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+
+        <!-- CONTROLS & FILTER BAR -->
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row gap-4 justify-between items-center">
+            
+            <!-- Filter Rombel & Hari -->
+            <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
+                <div class="flex items-center gap-2">
+                    <span class="text-xs font-semibold text-slate-500 uppercase">Rombel:</span>
+                    <select id="selectKelas" onchange="renderJadwalTable()" class="bg-slate-50 border border-slate-300 rounded-lg text-sm px-3 py-1.5 font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <!-- Dynamic options K7A - K9H -->
+                    </select>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <span class="text-xs font-semibold text-slate-500 uppercase">Hari:</span>
+                    <select id="selectHari" onchange="renderJadwalTable()" class="bg-slate-50 border border-slate-300 rounded-lg text-sm px-3 py-1.5 font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <option value="Senin">Senin (7 Jam)</option>
+                        <option value="Selasa">Selasa (8 Jam)</option>
+                        <option value="Rabu">Rabu (8 Jam)</option>
+                        <option value="Kamis">Kamis (7 Jam)</option>
+                        <option value="Jumat">Jumat (4 Jam)</option>
+                        <option value="Sabtu">Sabtu (5 Jam)</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Stats Badge -->
+            <div class="flex items-center gap-4 text-xs font-medium text-slate-600 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200">
+                <div class="flex items-center gap-1.5">
+                    <i data-lucide="users" class="w-4 h-4 text-indigo-600"></i>
+                    <span>Guru: <strong id="totalGuruCount" class="text-slate-800">37</strong></span>
+                </div>
+                <span class="text-slate-300">|</span>
+                <div class="flex items-center gap-1.5">
+                    <i data-lucide="layout-grid" class="w-4 h-4 text-indigo-600"></i>
+                    <span>Rombel: <strong class="text-slate-800">24</strong></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- NOTIFICATION / CONFLICT BANNER -->
+        <div id="conflictAlert" class="hidden bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3">
+            <i data-lucide="alert-triangle" class="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5"></i>
+            <div>
+                <h4 class="text-sm font-semibold text-amber-800">Peringatan Bentrok Jadwal!</h4>
+                <p id="conflictAlertMsg" class="text-xs text-amber-700 mt-0.5"></p>
+            </div>
+        </div>
+
+        <!-- MAIN SCHEDULE GRID TABLE -->
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+            <div class="p-4 border-b border-slate-200 bg-slate-50 flex justify-between items-center">
+                <h3 class="font-bold text-slate-700 text-sm flex items-center gap-2">
+                    <i data-lucide="clock" class="w-4 h-4 text-indigo-600"></i>
+                    Plotting Jadwal: <span id="currentTitle" class="text-indigo-600">Kelas 7A - Hari Senin</span>
+                </h3>
+                <span class="text-xs text-slate-400">Durasi Jam @40 Menit</span>
+            </div>
+
+            <div class="overflow-x-auto custom-scrollbar">
+                <table class="w-full text-left border-collapse text-sm">
+                    <thead>
+                        <tr class="bg-slate-100/70 text-slate-600 uppercase text-xs tracking-wider border-b border-slate-200">
+                            <th class="py-3 px-4 w-20 text-center">Jam Ke</th>
+                            <th class="py-3 px-4 w-32">Waktu</th>
+                            <th class="py-3 px-4">Mata Pelajaran</th>
+                            <th class="py-3 px-4">Guru Pengampu</th>
+                            <th class="py-3 px-4 w-24 text-center">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="jadwalTableBody" class="divide-y divide-slate-200">
+                        <!-- Dynamic Rows Generated by JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- LOADING OVERLAY -->
+    <div id="loadingOverlay" class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center">
+        <div class="bg-white p-5 rounded-2xl shadow-xl flex items-center gap-3">
+            <div class="animate-spin text-indigo-600">
+                <i data-lucide="loader-2" class="w-6 h-6"></i>
+            </div>
+            <span class="text-sm font-medium text-slate-700" id="loadingText">Menghubungkan ke server...</span>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- 4. JAVASCRIPT APP LOGIC                    -->
+    <!-- ========================================== -->
+    <script>
+        // --- KONFIGURASI GAS ---
+        // GANTI URL INI DENGAN WEB APP URL GOOGLE APPS SCRIPT ANDA
+        const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbywVf5GKam2xn5y5ngDJjFgR07w89rD8exgkc_mn1FIyrNIKVyrrog0eaBdxfx25fPb/exec";
+
+        // --- AUTH CONFIG ---
+        const VALID_USER = "kurikulum";
+        const VALID_PASS = "bangsal123";
+
+        // --- STATE APLIKASI ---
+        let masterGuru = [];
+        let masterKelas = [];
+        let strukturHari = [];
+        let stateJadwal = []; // Store local schedule items
+
+        // Jadwal waktu standar (40 menit)
+        const KETENTUAN_JAM = {
+            Senin: [
+                { jam: 1, waktu: "07:00 - 07:40" },
+                { jam: 2, waktu: "07:40 - 08:20" },
+                { jam: 3, waktu: "08:20 - 09:00" },
+                { type: "ISTIRAHAT", waktu: "09:00 - 09:20 (20 Menit)" },
+                { jam: 4, waktu: "09:20 - 10:00" },
+                { jam: 5, waktu: "10:00 - 10:40" },
+                { jam: 6, waktu: "10:40 - 11:20" },
+                { type: "ISTIRAHAT", waktu: "11:20 - 12:05 (45 Menit)" },
+                { jam: 7, waktu: "12:05 - 12:45" }
+            ],
+            Selasa: [
+                { jam: 1, waktu: "07:00 - 07:40" }, { jam: 2, waktu: "07:40 - 08:20" }, { jam: 3, waktu: "08:20 - 09:00" },
+                { type: "ISTIRAHAT", waktu: "09:00 - 09:20 (20m)" },
+                { jam: 4, waktu: "09:20 - 10:00" }, { jam: 5, waktu: "10:00 - 10:40" }, { jam: 6, waktu: "10:40 - 11:20" },
+                { type: "ISTIRAHAT", waktu: "11:20 - 12:05 (45m)" },
+                { jam: 7, waktu: "12:05 - 12:45" }, { jam: 8, waktu: "12:45 - 13:25" }
+            ],
+            Rabu: [
+                { jam: 1, waktu: "07:00 - 07:40" }, { jam: 2, waktu: "07:40 - 08:20" }, { jam: 3, waktu: "08:20 - 09:00" },
+                { type: "ISTIRAHAT", waktu: "09:00 - 09:20 (20m)" },
+                { jam: 4, waktu: "09:20 - 10:00" }, { jam: 5, waktu: "10:00 - 10:40" }, { jam: 6, waktu: "10:40 - 11:20" },
+                { type: "ISTIRAHAT", waktu: "11:20 - 12:05 (45m)" },
+                { jam: 7, waktu: "12:05 - 12:45" }, { jam: 8, waktu: "12:45 - 13:25" }
+            ],
+            Kamis: [
+                { jam: 1, waktu: "07:00 - 07:40" }, { jam: 2, waktu: "07:40 - 08:20" }, { jam: 3, waktu: "08:20 - 09:00" },
+                { type: "ISTIRAHAT", waktu: "09:00 - 09:20 (20m)" },
+                { jam: 4, waktu: "09:20 - 10:00" }, { jam: 5, waktu: "10:00 - 10:40" }, { jam: 6, waktu: "10:40 - 11:20" },
+                { type: "ISTIRAHAT", waktu: "11:20 - 12:05 (45m)" },
+                { jam: 7, waktu: "12:05 - 12:45" }
+            ],
+            Jumat: [
+                { jam: 1, waktu: "07:00 - 07:40" }, { jam: 2, waktu: "07:40 - 08:20" },
+                { type: "ISTIRAHAT", waktu: "08:20 - 08:40 (20m)" },
+                { jam: 3, waktu: "08:40 - 09:20" }, { jam: 4, waktu: "09:20 - 10:00" }
+            ],
+            Sabtu: [
+                { jam: 1, waktu: "07:00 - 07:40" }, { jam: 2, waktu: "07:40 - 08:20" }, { jam: 3, waktu: "08:20 - 09:00" },
+                { type: "ISTIRAHAT", waktu: "09:00 - 09:20 (20m)" },
+                { jam: 4, waktu: "09:20 - 10:00" }, { jam: 5, waktu: "10:00 - 10:40" }
+            ]
+        };
+
+        // --- INIT APPLICATION ---
+        document.addEventListener("DOMContentLoaded", () => {
+            lucide.createIcons();
+            checkSession();
+        });
+
+        // --- AUTH FUNCTIONS ---
+        function checkSession() {
+            const isAuth = sessionStorage.getItem("isLoggedIn");
+            if (isAuth === "true") {
+                document.getElementById("loginSection").classList.add("hidden");
+                loadDataFromGAS();
+            } else {
+                document.getElementById("loginSection").classList.remove("hidden");
+            }
+        }
+
+        function handleLogin(e) {
+            e.preventDefault();
+            const u = document.getElementById("loginUser").value;
+            const p = document.getElementById("loginPass").value;
+
+            if (u === VALID_USER && p === VALID_PASS) {
+                sessionStorage.setItem("isLoggedIn", "true");
+                document.getElementById("loginSection").classList.add("hidden");
+                loadDataFromGAS();
+            } else {
+                document.getElementById("loginError").classList.remove("hidden");
+            }
+        }
+
+        function handleLogout() {
+            sessionStorage.removeItem("isLoggedIn");
+            location.reload();
+        }
+
+        // --- DATA FETCHING (GAS API) ---
+        async function loadDataFromGAS() {
+            showLoading("Mengambil master data dari Google Sheets...");
+            try {
+                // Panggilan API ke Google Apps Script
+                const response = await fetch(`${GAS_WEB_APP_URL}?action=getAllData`);
+                const result = await response.json();
+
+                if (result.status === "success") {
+                    masterGuru = result.data.guru || [];
+                    masterKelas = result.data.kelas || [];
+                    stateJadwal = result.data.jadwal || [];
+
+                    populateKelasDropdown();
+                    document.getElementById("totalGuruCount").innerText = masterGuru.length;
+                    renderJadwalTable();
+                } else {
+                    alert("Gagal memuat data dari spreadsheet: " + result.message);
+                }
+            } catch (err) {
+                console.warn("Menggunakan Mode Offline/Fallback Mock Data...");
+                setupMockData();
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // --- MOCK DATA FALLBACK (Jika GAS URL belum diisi/salah) ---
+        function setupMockData() {
+            masterKelas = [];
+            ["7", "8", "9"].forEach(t => {
+                ["A", "B", "C", "D", "E", "F", "G", "H"].forEach(h => {
+                    masterKelas.push({ id_kelas: `K_${t}${h}`, nama_kelas: `${t}${h}` });
+                });
+            });
+            masterGuru = [
+                { id_guru: "G01", kode_guru: "AFR", nama_guru: "AFRIZA RACHMAWATI, S.Pd.", kompetensi: "Pendidikan Luar Biasa" },
+                { id_guru: "G02", kode_guru: "ANT", nama_guru: "Anton Dwi Kurniawan, S.Pd.", kompetensi: "Bahasa Indonesia" },
+                { id_guru: "G03", kode_guru: "ARI", nama_guru: "ARIS MUAZIR, S.Pd.I", kompetensi: "Pendidikan Agama Islam" },
+                { id_guru: "G11", kode_guru: "ENY", nama_guru: "Eny Pujiastutik, S.Pd.", kompetensi: "Bahasa Inggris" }
+            ];
+            populateKelasDropdown();
+            renderJadwalTable();
+        }
+
+        function populateKelasDropdown() {
+            const select = document.getElementById("selectKelas");
+            select.innerHTML = "";
+            masterKelas.forEach(k => {
+                const opt = document.createElement("option");
+                opt.value = k.id_kelas;
+                opt.innerText = `Kelas ${k.nama_kelas}`;
+                select.appendChild(opt);
+            });
+        }
+
+        // --- TABLE RENDER LOGIC ---
+        function renderJadwalTable() {
+            const currentKelasId = document.getElementById("selectKelas").value || "K_7A";
+            const currentHari = document.getElementById("selectHari").value || "Senin";
+            
+            const kelasObj = masterKelas.find(k => k.id_kelas === currentKelasId);
+            const namaKelas = kelasObj ? kelasObj.nama_kelas : "7A";
+            
+            document.getElementById("currentTitle").innerText = `Kelas ${namaKelas} - Hari ${currentHari}`;
+
+            const tbody = document.getElementById("jadwalTableBody");
+            tbody.innerHTML = "";
+
+            const listJam = KETENTUAN_JAM[currentHari] || [];
+
+            listJam.forEach(item => {
+                const tr = document.createElement("tr");
+
+                if (item.type === "ISTIRAHAT") {
+                    tr.className = "bg-slate-100 text-slate-500 font-medium italic text-center text-xs";
+                    tr.innerHTML = `
+                        <td class="py-2 px-4" colspan="5">
+                            <span class="flex items-center justify-center gap-2">
+                                <i data-lucide="coffee" class="w-3.5 h-3.5"></i> ISTIRAHAT (${item.waktu})
+                            </span>
+                        </td>
+                    `;
+                } else {
+                    // Temukan entry jadwal jika ada
+                    const existingData = stateJadwal.find(j => 
+                        j.hari === currentHari && 
+                        parseInt(j.jam_ke) === item.jam && 
+                        j.id_kelas === currentKelasId
+                    ) || { nama_mapel: "", id_guru: "" };
+
+                    tr.className = "hover:bg-slate-50/80 transition-colors";
+                    tr.innerHTML = `
+                        <td class="py-3 px-4 text-center font-bold text-slate-700 bg-slate-50/50">${item.jam}</td>
+                        <td class="py-3 px-4 text-slate-500 text-xs">${item.waktu}</td>
+                        <td class="py-3 px-4">
+                            <input type="text" value="${existingData.nama_mapel}" 
+                                placeholder="Pilih / ketik mapel..."
+                                onchange="updateJadwalLocal('${currentHari}', ${item.jam}, '${currentKelasId}', 'mapel', this.value)"
+                                class="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1 text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                        </td>
+                        <td class="py-3 px-4">
+                            <select onchange="updateJadwalLocal('${currentHari}', ${item.jam}, '${currentKelasId}', 'guru', this.value)"
+                                class="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1 text-xs font-medium text-slate-700 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                                <option value="">-- Pilih Guru Pengampu --</option>
+                                ${masterGuru.map(g => `
+                                    <option value="${g.id_guru}" ${existingData.id_guru === g.id_guru ? 'selected' : ''}>
+                                        ${g.kode_guru} - ${g.nama_guru} (${g.kompetensi || ''})
+                                    </option>
+                                `).join('')}
+                            </select>
+                        </td>
+                        <td class="py-3 px-4 text-center">
+                            <button onclick="clearSingleRow('${currentHari}', ${item.jam}, '${currentKelasId}')" 
+                                class="text-slate-400 hover:text-red-600 transition-colors" title="Kosongkan">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                            </button>
+                        </td>
+                    `;
+                }
+                tbody.appendChild(tr);
+            });
+
+            lucide.createIcons();
+            checkConflicts();
+        }
+
+        // --- LOCAL UPDATE & VALIDASI BENTROK ---
+        function updateJadwalLocal(hari, jamKe, idKelas, field, value) {
+            let entry = stateJadwal.find(j => j.hari === hari && parseInt(j.jam_ke) === jamKe && j.id_kelas === idKelas);
+
+            if (!entry) {
+                entry = { id_jadwal: `JAD_${hari}_${jamKe}_${idKelas}`, hari: hari, jam_ke: jamKe, id_kelas: idKelas, id_guru: "", nama_mapel: "" };
+                stateJadwal.push(entry);
+            }
+
+            if (field === 'guru') entry.id_guru = value;
+            if (field === 'mapel') entry.nama_mapel = value;
+
+            checkConflicts();
+        }
+
+        function clearSingleRow(hari, jamKe, idKelas) {
+            stateJadwal = stateJadwal.filter(j => !(j.hari === hari && parseInt(j.jam_ke) === jamKe && j.id_kelas === idKelas));
+            renderJadwalTable();
+        }
+
+        // Pengecekan real-time bentrok guru mengajar di jam sama
+        function checkConflicts() {
+            const conflictAlert = document.getElementById("conflictAlert");
+            const conflictMsg = document.getElementById("conflictAlertMsg");
+            const map = {};
+            let hasConflict = false;
+            let conflictDetail = "";
+
+            for (const item of stateJadwal) {
+                if (!item.id_guru) continue;
+                const key = `${item.hari}_J${item.jam_ke}_G${item.id_guru}`;
+                
+                if (map[key]) {
+                    hasConflict = true;
+                    const g = masterGuru.find(x => x.id_guru === item.id_guru);
+                    const namaG = g ? g.nama_guru : item.id_guru;
+                    conflictDetail = `<strong>${namaG}</strong> bentrok mengajar di 2 kelas berbeda pada hari <strong>${item.hari}</strong> jam ke-<strong>${item.jam_ke}</strong>!`;
+                    break;
+                }
+                map[key] = item.id_kelas;
+            }
+
+            if (hasConflict) {
+                conflictMsg.innerHTML = conflictDetail;
+                conflictAlert.classList.remove("hidden");
+            } else {
+                conflictAlert.classList.add("hidden");
+            }
+        }
+
+        // --- SAVE DATA TO GAS ---
+        async function saveAllJadwalToGAS() {
+            showLoading("Menyimpan seluruh jadwal ke Google Sheets...");
+            try {
+                const response = await fetch(GAS_WEB_APP_URL, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        action: "saveJadwalBatch",
+                        items: stateJadwal
+                    })
+                });
+
+                const res = await response.json();
+                if (res.status === "success") {
+                    alert("Berhasil! Semua jadwal berhasil disimpan ke database Google Sheets.");
+                } else if (res.status === "conflict_error") {
+                    alert("Gagal Simpan karena Ada Bentrok:\n\n" + res.errors.join("\n"));
+                } else {
+                    alert("Terjadi kesalahan: " + res.message);
+                }
+            } catch (err) {
+                alert("Gagal terhubung ke Google Apps Script. Pastikan Web App URL sudah diisi dengan benar!");
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // --- UI HELPERS ---
+        function showLoading(msg) {
+            document.getElementById("loadingText").innerText = msg || "Loading...";
+            document.getElementById("loadingOverlay").classList.remove("hidden");
+        }
+
+        function hideLoading() {
+            document.getElementById("loadingOverlay").classList.add("hidden");
+        }
+    </script>
+</body>
+</html>
