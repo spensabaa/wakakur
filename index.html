@@ -8,6 +8,20 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <!-- FontAwesome Icons -->
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <style>
+    /* Mengatur style khusus agar tabel jadwal pas & rapi */
+    .table-jadwal th, .table-jadwal td {
+      vertical-align: middle;
+      text-align: center;
+      padding: 4px 6px !important;
+      white-space: nowrap;
+    }
+    .table-jadwal select {
+      min-width: 65px;
+      padding: 2px 4px;
+      font-size: 0.75rem;
+    }
+  </style>
 </head>
 <body class="bg-light text-dark">
 
@@ -16,8 +30,8 @@
     const GAS_URL = "https://script.google.com/macros/s/AKfycbx9Kc2eK1EuCAOYXdrRuub5WB_6qlKEKjnksjJpqayeOL0jLnMiNaZC8kx7ymO1I5AC/exec";
   </script>
 
-  <!-- MODAL LOGIN (DITAMPILKAN SECARA DEFAULT) -->
-  <div id="loginModal" class="position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-75 z-3 flex-column justify-center align-items-center d-flex p-3">
+  <!-- MODAL LOGIN -->
+  <div id="loginModal" class="position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-75 z-3 flex-column justify-content-center align-items-center d-flex p-3">
     <div class="card shadow-lg border-0 rounded-4 w-100" style="max-width: 400px;">
       <div class="card-body p-4 text-center">
         <div class="bg-primary-subtle text-primary rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 64px; height: 64px;">
@@ -40,7 +54,7 @@
             Username atau password salah!
           </div>
 
-          <button type="submit" id="loginBtn" class="btn btn-primary w-100 py-2.5 fw-bold shadow-sm flex-row align-items-center justify-content-center gap-2">
+          <button type="submit" id="loginBtn" class="btn btn-primary w-100 py-2 fw-bold shadow-sm d-flex align-items-center justify-content-center gap-2">
             <span>Masuk Aplikasi</span>
             <i class="fa-solid fa-arrow-right"></i>
           </button>
@@ -49,7 +63,7 @@
     </div>
   </div>
 
-  <!-- APLIKASI UTAMA (DITAMPILKAN SETELAH LOGIN) -->
+  <!-- APLIKASI UTAMA -->
   <div id="appContainer" class="d-none min-vh-100 d-flex flex-column">
     
     <!-- NAVBAR HEADER -->
@@ -58,7 +72,7 @@
         <a class="navbar-brand d-flex align-items-center gap-2" href="#">
           <i class="fa-solid fa-calendar-days text-primary fs-4"></i>
           <div>
-            <div class="fw-bold fs-6 leading-none">TimeTable SMPN 1 Bangsal</div>
+            <div class="fw-bold fs-6">TimeTable SMPN 1 Bangsal</div>
             <div class="text-secondary small" style="font-size: 0.75rem;">Pengguna: <span id="currentUser" class="text-light">Admin</span></div>
           </div>
         </a>
@@ -81,7 +95,7 @@
             <i class="fa-solid fa-rotate"></i>
             <span class="d-none d-sm-inline">Reset Sheet</span>
           </button>
-          <button onclick="logout()" class="btn btn-outline-light btn-sm">
+          <button onclick="logout()" class="btn btn-outline-light btn-sm" title="Keluar">
             <i class="fa-solid fa-right-from-bracket"></i>
           </button>
         </div>
@@ -107,17 +121,15 @@
         </div>
 
         <div class="card border-0 shadow-sm">
-          <div class="card-body p-0">
+          <div class="card-body p-2">
             <div class="table-responsive">
-              <table class="table table-bordered align-middle mb-0 text-center" style="font-size: 0.85rem;" id="jadwalMatrixTable">
+              <table class="table table-bordered table-hover align-middle mb-0 table-jadwal">
                 <thead class="table-light text-uppercase">
-                  <tr>
-                    <th style="width: 100px;">Hari</th>
-                    <th style="width: 80px;">Jam Ke</th>
-                    <th style="width: 140px;">Waktu</th>
-                    <th id="kelasHeaderGroup" class="p-0">
-                      <!-- Dynamic Header Kelas (Master_Kelas) -->
-                    </th>
+                  <tr id="jadwalHeaderRow">
+                    <th style="width: 80px;">Hari</th>
+                    <th style="width: 60px;">Jam Ke</th>
+                    <th style="width: 120px;">Waktu</th>
+                    <!-- Kolom Kelas akan di-render di JS secara manual sebagai <th> standar -->
                   </tr>
                 </thead>
                 <tbody id="jadwalMatrixBody">
@@ -148,7 +160,7 @@
           <div class="card-body p-0">
             <div class="table-responsive">
               <table class="table table-hover align-middle mb-0" style="font-size: 0.85rem;">
-                <thead class="table-light font-bold">
+                <thead class="table-light fw-bold">
                   <tr>
                     <th class="px-3">ID Guru</th>
                     <th class="px-3">Kode</th>
@@ -211,7 +223,7 @@
     </main>
   </div>
 
-  <!-- MODAL GURU FORM (BOOTSTRAP MODAL) -->
+  <!-- MODAL GURU FORM -->
   <div class="modal fade" id="guruModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content border-0 shadow-lg">
@@ -274,7 +286,19 @@
 
     document.addEventListener("DOMContentLoaded", () => {
       bsGuruModal = new bootstrap.Modal(document.getElementById('guruModal'));
+      checkAutoLogin();
     });
+
+    // AUTO LOGIN CHECK (PERSISTENSI LOCAL STORAGE)
+    function checkAutoLogin() {
+      const savedUser = localStorage.getItem("timetable_user");
+      if (savedUser) {
+        document.getElementById("loginModal").classList.add("d-none");
+        document.getElementById("appContainer").classList.remove("d-none");
+        document.getElementById("currentUser").innerText = savedUser;
+        loadAllData();
+      }
+    }
 
     // 1. OTENTIKASI LOGIN
     async function handleLogin(e) {
@@ -285,7 +309,7 @@
       const err = document.getElementById("loginError");
 
       btn.disabled = true;
-      btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2" role="status"></span><span>Memproses...</span>`;
+      btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span><span>Memproses...</span>`;
       err.classList.add("d-none");
 
       try {
@@ -296,9 +320,11 @@
         const res = await response.json();
 
         if (res.status === "success") {
+          const userNama = res.user.nama || u;
+          localStorage.setItem("timetable_user", userNama); // Simpan status session
           document.getElementById("loginModal").classList.add("d-none");
           document.getElementById("appContainer").classList.remove("d-none");
-          document.getElementById("currentUser").innerText = res.user.nama || u;
+          document.getElementById("currentUser").innerText = userNama;
           loadAllData();
         } else {
           err.innerText = res.message || "Username atau password salah!";
@@ -314,6 +340,7 @@
     }
 
     function logout() {
+      localStorage.removeItem("timetable_user"); // Hapus session
       location.reload();
     }
 
@@ -331,6 +358,18 @@
       } catch (e) {
         console.error("Gagal membaca data dari GAS", e);
       }
+    }
+
+    // HELPER: FORMAT STRING WAKTU ISO BIAR RAPI
+    function formatWaktuStr(val) {
+      if (!val) return "-";
+      if (typeof val === 'string' && val.includes('T') && val.includes('Z')) {
+        const d = new Date(val);
+        const hh = String(d.getHours()).padStart(2, '0');
+        const mm = String(d.getMinutes()).padStart(2, '0');
+        return `${hh}:${mm}`;
+      }
+      return val;
     }
 
     // 3. TAB SWITCHING
@@ -439,19 +478,18 @@
       const tbody = document.getElementById("waktuTableBody");
       tbody.innerHTML = "";
 
-      const waktuData = GLOBAL_DATA.waktu && GLOBAL_DATA.waktu.length > 0 ? GLOBAL_DATA.waktu : [
-        { hari: "Senin", jam_ke: 1, waktu_mulai: "07:00", waktu_selesai: "07:40", is_istirahat: false, keterangan: "Upacara" },
-        { hari: "Senin", jam_ke: 2, waktu_mulai: "07:40", waktu_selesai: "08:20", is_istirahat: false, keterangan: "KBM" },
-        { hari: "Senin", jam_ke: 3, waktu_mulai: "08:20", waktu_selesai: "09:00", is_istirahat: true, keterangan: "Istirahat I" }
-      ];
+      const waktuData = GLOBAL_DATA.waktu && GLOBAL_DATA.waktu.length > 0 ? GLOBAL_DATA.waktu : [];
 
       waktuData.forEach((w) => {
+        const wMulai = formatWaktuStr(w.waktu_mulai);
+        const wSelesai = formatWaktuStr(w.waktu_selesai);
+
         tbody.innerHTML += `
           <tr class="waktu-row">
             <td><input type="text" value="${w.hari}" class="form-control form-control-sm w-hari"></td>
             <td><input type="number" value="${w.jam_ke}" class="form-control form-control-sm w-jam"></td>
-            <td><input type="time" value="${w.waktu_mulai}" class="form-control form-control-sm w-mulai"></td>
-            <td><input type="time" value="${w.waktu_selesai}" class="form-control form-control-sm w-selesai"></td>
+            <td><input type="time" value="${wMulai}" class="form-control form-control-sm w-mulai"></td>
+            <td><input type="time" value="${wSelesai}" class="form-control form-control-sm w-selesai"></td>
             <td class="text-center"><input type="checkbox" ${w.is_istirahat ? 'checked' : ''} class="form-check-input w-istirahat"></td>
             <td><input type="text" value="${w.keterangan || ''}" class="form-control form-control-sm w-ket"></td>
           </tr>
@@ -480,40 +518,45 @@
       alert("Setting waktu berhasil disimpan ke Sheet Setting_Waktu!");
     }
 
-    // 6. RENDER PLOTTING JADWAL MATRIX
+    // 6. RENDER PLOTTING JADWAL MATRIX (MENGGUNAKAN TR/TH/TD MURNI)
     function renderJadwalMatrix() {
-      const headerGroup = document.getElementById("kelasHeaderGroup");
+      const headerRow = document.getElementById("jadwalHeaderRow");
       const tbody = document.getElementById("jadwalMatrixBody");
 
-      const kelasList = GLOBAL_DATA.kelas.length > 0 ? GLOBAL_DATA.kelas : [
-        { id_kelas: "K7A", nama_kelas: "7A" },
-        { id_kelas: "K7B", nama_kelas: "7B" },
-        { id_kelas: "K8A", nama_kelas: "8A" }
-      ];
+      const kelasList = GLOBAL_DATA.kelas || [];
 
-      // Header Kelas
-      headerGroup.innerHTML = `<div class="d-flex text-center border-start">
-        ${kelasList.map(k => `<div class="flex-fill p-2 fw-bold border-end">${k.nama_kelas}</div>`).join('')}
-      </div>`;
+      // Render Header Tabel (Hari, Jam Ke, Waktu + Nama-nama Kelas)
+      headerRow.innerHTML = `
+        <th style="width: 80px;">Hari</th>
+        <th style="width: 60px;">Jam Ke</th>
+        <th style="width: 120px;">Waktu</th>
+        ${kelasList.map(k => `<th>${k.nama_kelas}</th>`).join('')}
+      `;
 
       tbody.innerHTML = "";
-      const waktuData = GLOBAL_DATA.waktu.length > 0 ? GLOBAL_DATA.waktu : [
-        { hari: "Senin", jam_ke: 1, waktu_str: "07:00 - 07:40" },
-        { hari: "Senin", jam_ke: 2, waktu_str: "07:40 - 08:20" }
-      ];
+      const waktuData = GLOBAL_DATA.waktu || [];
 
       waktuData.forEach(w => {
-        let cellHtml = "";
+        let waktuDisplay = "";
+        if (w.waktu_str) {
+          waktuDisplay = w.waktu_str;
+        } else {
+          const tMulai = formatWaktuStr(w.waktu_mulai);
+          const tSelesai = formatWaktuStr(w.waktu_selesai);
+          waktuDisplay = `${tMulai} - ${tSelesai}`;
+        }
+
+        let cellsHtml = "";
         kelasList.forEach(k => {
           const currentJadwal = GLOBAL_DATA.jadwal.find(j => j.hari === w.hari && j.jam_ke == w.jam_ke && j.id_kelas === k.id_kelas) || {};
 
-          cellHtml += `
-            <div class="flex-fill p-1 border-end">
-              <select data-hari="${w.hari}" data-jam="${w.jam_ke}" data-kelas="${k.id_kelas}" class="jadwal-select form-select form-select-sm" style="font-size: 0.75rem;">
-                <option value="">- Kosong -</option>
-                ${GLOBAL_DATA.guru.map(g => `<option value="${g.id_guru}" ${currentJadwal.id_guru === g.id_guru ? 'selected' : ''}>${g.kode_guru} (${g.kompetensi || 'Guru'})</option>`).join('')}
+          cellsHtml += `
+            <td>
+              <select data-hari="${w.hari}" data-jam="${w.jam_ke}" data-kelas="${k.id_kelas}" class="jadwal-select form-select form-select-sm">
+                <option value="">-</option>
+                ${GLOBAL_DATA.guru.map(g => `<option value="${g.id_guru}" ${currentJadwal.id_guru === g.id_guru ? 'selected' : ''}>${g.kode_guru}</option>`).join('')}
               </select>
-            </div>
+            </td>
           `;
         });
 
@@ -521,12 +564,8 @@
           <tr>
             <td class="fw-medium">${w.hari}</td>
             <td class="fw-bold">${w.jam_ke}</td>
-            <td class="text-secondary whitespace-nowrap">${w.waktu_str || w.waktu_mulai}</td>
-            <td class="p-0">
-              <div class="d-flex">
-                ${cellHtml}
-              </div>
-            </td>
+            <td class="text-secondary font-monospace" style="font-size: 0.75rem;">${waktuDisplay}</td>
+            ${cellsHtml}
           </tr>
         `;
       });
