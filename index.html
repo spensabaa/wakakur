@@ -276,7 +276,6 @@
             } catch (e) { console.error(e); }
         }
 
-        // --- MEMASTIKAN HARI SENIN-SABTU MEMILIKI JAM BAWAAN JIKA KOSONG ---
         function ensureFullWaktuData() {
             const defaultHours = {
                 "Senin": 7, "Selasa": 8, "Rabu": 8, "Kamis": 7, "Jumat": 4, "Sabtu": 5
@@ -347,6 +346,12 @@
             return `${m} - ${s}`;
         }
 
+        function getStartMinutes(w) {
+            const range = getWaktuString(w);
+            const startStr = range.split("-")[0].trim();
+            return timeToMinutes(startStr);
+        }
+
         function cleanTimeFormat(val) {
             if (!val) return "00:00";
             if (typeof val === 'string' && val.includes("T")) {
@@ -360,7 +365,7 @@
             return String(val);
         }
 
-        // --- RENDER TABEL PLOTTING JADWAL ---
+        // --- RENDER TABEL PLOTTING JADWAL (DENGAN SORTING BERDASARKAN WAKTU) ---
         function renderJadwalTable() {
             const currentKelas = document.getElementById("selectKelas").value || (masterKelas[0] ? masterKelas[0].id_kelas : "K_7A");
             const currentHari = document.getElementById("selectHari").value || "Senin";
@@ -371,10 +376,13 @@
             const tbody = document.getElementById("jadwalTableBody");
             tbody.innerHTML = "";
 
-            const waktuHari = masterWaktu.filter(w => String(w.hari).toLowerCase() === currentHari.toLowerCase());
+            // Ambil data waktu dan URUTKAN berdasarkan jam/waktu mulai agar Istirahat berada di urutan yang pas
+            const waktuHari = masterWaktu
+                .filter(w => String(w.hari).toLowerCase() === currentHari.toLowerCase())
+                .sort((a, b) => getStartMinutes(a) - getStartMinutes(b));
 
             if (waktuHari.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" class="text-center py-6 text-slate-400">Belum ada pengaturan waktu untuk hari ${currentHari}.Silakan atur di Tab Setting Waktu.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="5" class="text-center py-6 text-slate-400">Belum ada pengaturan waktu untuk hari ${currentHari}. Silakan atur di Tab Setting Waktu.</td></tr>`;
                 return;
             }
 
@@ -384,7 +392,7 @@
                 const rentangWaktuText = getWaktuString(w);
 
                 if (isIstirahat) {
-                    tr.className = "bg-amber-50/70 text-amber-700 italic text-center font-medium";
+                    tr.className = "bg-amber-50/70 text-amber-700 italic text-center font-medium border-y border-amber-200";
                     tr.innerHTML = `<td colspan="5" class="py-2.5"><i data-lucide="coffee" class="w-4 h-4 inline mr-1"></i> ISTIRAHAT (${rentangWaktuText}) ${w.keterangan ? '- ' + w.keterangan : ''}</td>`;
                 } else {
                     const existing = stateJadwal.find(j => j.hari === currentHari && parseInt(j.jam_ke) === parseInt(w.jam_ke) && j.id_kelas === currentKelas) || { nama_mapel: "", id_guru: "" };
@@ -522,8 +530,16 @@
             }
         }
 
-        // --- SETTING RENTANG WAKTU (INPUT MANUAL) ---
+        // --- SETTING RENTANG WAKTU (SORTED BY HARI DAN WAKTU) ---
         function renderWaktuTable() {
+            // Sort masterWaktu berdasarkan Hari dan Waktu Mulai
+            masterWaktu.sort((a, b) => {
+                const dayIndexA = LIST_HARI.indexOf(a.hari);
+                const dayIndexB = LIST_HARI.indexOf(b.hari);
+                if (dayIndexA !== dayIndexB) return dayIndexA - dayIndexB;
+                return getStartMinutes(a) - getStartMinutes(b);
+            });
+
             const tbody = document.getElementById("waktuTableBody");
             tbody.innerHTML = masterWaktu.map((w, idx) => {
                 const isIstirahat = String(w.is_istirahat).toLowerCase() === "true" || w.is_istirahat === true;
