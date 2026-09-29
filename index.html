@@ -293,7 +293,25 @@
 
     document.addEventListener("DOMContentLoaded", function () {
       modalGuruObj = new bootstrap.Modal(document.getElementById('modalGuru'));
+      
+      // PERIKSA SESI LOGIN SAAT HALAMAN DI-REFRESH
+      checkExistingSession();
     });
+
+    function checkExistingSession() {
+      const savedUser = localStorage.getItem("sim_timetable_user");
+      if (savedUser) {
+        try {
+          const userObj = JSON.parse(savedUser);
+          document.getElementById("userDisplayName").innerText = userObj.nama || userObj.username;
+          document.getElementById("section-login").classList.add("d-none");
+          document.getElementById("section-dashboard").classList.remove("d-none");
+          loadInitialData();
+        } catch (e) {
+          localStorage.removeItem("sim_timetable_user");
+        }
+      }
+    }
 
     function showLoading(show, text = "Memuat Data...") {
       document.getElementById("loadingText").innerText = text;
@@ -315,7 +333,11 @@
       .then(res => {
         showLoading(false);
         if (res.status === "success") {
-          document.getElementById("userDisplayName").innerText = res.user.nama || u;
+          // SIMPAN SESI KE LOCAL STORAGE
+          const userData = { username: u, nama: res.user.nama || u };
+          localStorage.setItem("sim_timetable_user", JSON.stringify(userData));
+
+          document.getElementById("userDisplayName").innerText = userData.nama;
           document.getElementById("section-login").classList.add("d-none");
           document.getElementById("section-dashboard").classList.remove("d-none");
           loadInitialData();
@@ -330,6 +352,9 @@
     }
 
     function handleLogout() {
+      // HAPUS SESI DARI LOCAL STORAGE
+      localStorage.removeItem("sim_timetable_user");
+      
       document.getElementById("section-dashboard").classList.add("d-none");
       document.getElementById("section-login").classList.remove("d-none");
       document.getElementById("formLogin").reset();
@@ -542,7 +567,7 @@
       });
     }
 
-    // --- MASTER GURU (KOLOM NUPTK & NIP DIHAPUS DARI TABEL) ---
+    // --- MASTER GURU ---
     function renderTabelMasterGuru() {
       const tbody = document.getElementById("tabelGuruBody");
       const dataGuru = GLOBAL_DATA.guru || [];
