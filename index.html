@@ -665,97 +665,125 @@
 
     // OPTIMASI 3: MEMBANGUN MATRIX RINGAN BEBAS FREEZING BROWSER
     function renderJadwalMatrix() {
-      const headerRow = document.getElementById("jadwalHeaderRow");
-      const tbody = document.getElementById("jadwalMatrixBody");
+  const headerRow = document.getElementById("jadwalHeaderRow");
+  const tbody = document.getElementById("jadwalMatrixBody");
 
-      const selHari = document.getElementById("filterHari").value;
-      const selKelas = document.getElementById("filterKelas").value;
+  const selHari = document.getElementById("filterHari").value;
+  const selKelas = document.getElementById("filterKelas").value;
 
-      let activeKelas = GLOBAL_DATA.kelas || [];
-      if (selKelas !== "ALL") {
-        activeKelas = activeKelas.filter(k => String(k.id_kelas) === String(selKelas));
+  let activeKelas = GLOBAL_DATA.kelas || [];
+  if (selKelas !== "ALL") {
+    activeKelas = activeKelas.filter(k => String(k.id_kelas) === String(selKelas));
+  }
+
+  let activeWaktu = GLOBAL_DATA.waktu || [];
+  if (selHari !== "ALL") {
+    activeWaktu = activeWaktu.filter(w => String(w.hari).toLowerCase() === String(selHari).toLowerCase());
+  }
+
+  headerRow.innerHTML = `
+    <th style="width: 80px;">HARI</th>
+    <th style="width: 60px;">JAM KE</th>
+    <th style="width: 110px;">WAKTU</th>
+    ${activeKelas.map(k => `<th>${k.nama_kelas}</th>`).join('')}
+  `;
+
+  if (activeWaktu.length === 0 || activeKelas.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="${3 + activeKelas.length}" class="p-4 text-center text-muted">Tidak ada data jadwal.</td></tr>`;
+    return;
+  }
+
+  // PRE-COMPILE OPTIONS GURU
+  let baseGuruOptionsHtml = `<option value="">-- Pilih Guru & Mapel --</option>`;
+  (GLOBAL_DATA.guru || []).forEach(g => {
+    const valLinier = `${g.id_guru}::${g.kompetensi || 'Utama'}`;
+    baseGuruOptionsHtml += `<option value="${valLinier}">${g.kode_guru} - ${g.nama_guru} (${g.kompetensi || 'Linier'})</option>`;
+
+    LIST_MAPEL.forEach(m => {
+      if (m.toLowerCase() !== (g.kompetensi || '').toLowerCase()) {
+        const valNonLinier = `${g.id_guru}::${m}`;
+        baseGuruOptionsHtml += `<option value="${valNonLinier}">↳ ${g.kode_guru} - ${g.nama_guru} [Non-Linier: ${m}]</option>`;
       }
+    });
+  });
 
-      let activeWaktu = GLOBAL_DATA.waktu || [];
-      if (selHari !== "ALL") {
-        activeWaktu = activeWaktu.filter(w => String(w.hari).toLowerCase() === String(selHari).toLowerCase());
-      }
-
-      headerRow.innerHTML = `
-        <th style="width: 80px;">HARI</th>
-        <th style="width: 60px;">JAM KE</th>
-        <th style="width: 110px;">WAKTU</th>
-        ${activeKelas.map(k => `<th>${k.nama_kelas}</th>`).join('')}
-      `;
-
-      if (activeWaktu.length === 0 || activeKelas.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="${3 + activeKelas.length}" class="p-4 text-center text-muted">Tidak ada data jadwal.</td></tr>`;
-        return;
-      }
-
-      // PRE-COMPILE LIST OPTIONS GURU 1 KALI UNTUK SEMUA CELL (Memotong Beban CPU Browser hingga 90%)
-      let baseGuruOptionsHtml = `<option value="">-- Pilih Guru & Mapel --</option>`;
-      (GLOBAL_DATA.guru || []).forEach(g => {
-        const valLinier = `${g.id_guru}::${g.kompetensi || 'Utama'}`;
-        baseGuruOptionsHtml += `<option value="${valLinier}">${g.kode_guru} - ${g.nama_guru} (${g.kompetensi || 'Linier'})</option>`;
-
-        LIST_MAPEL.forEach(m => {
-          if (m.toLowerCase() !== (g.kompetensi || '').toLowerCase()) {
-            const valNonLinier = `${g.id_guru}::${m}`;
-            baseGuruOptionsHtml += `<option value="${valNonLinier}">↳ ${g.kode_guru} - ${g.nama_guru} [Non-Linier: ${m}]</option>`;
-          }
-        });
-      });
-
-      // Bikin Map Jadwal Terindeks agar Pencarian O(1) Instan
-      const jadwalMap = {};
-      (GLOBAL_DATA.jadwal || []).forEach(j => {
-        const key = `${String(j.hari).toLowerCase()}_${j.jam_ke}_${j.id_kelas}`;
-        jadwalMap[key] = j;
-      });
-
-      let tbodyContentHtml = "";
-
-      activeWaktu.forEach(w => {
-        let waktuDisplay = w.waktu_str ? w.waktu_str : `${cleanTimeString(w.waktu_mulai)} - ${cleanTimeString(w.waktu_selesai)}`;
-
-        let cellsHtml = "";
-        activeKelas.forEach(k => {
-          const key = `${String(w.hari).toLowerCase()}_${w.jam_ke}_${k.id_kelas}`;
-          const currentJadwal = jadwalMap[key] || {};
-
-          let selectValue = "";
-          if (currentJadwal.id_guru) {
-            selectValue = `${currentJadwal.id_guru}::${currentJadwal.mapel || ''}`;
-          }
-
-          // Injeksi nilai terpilih secara cepat tanpa replace looping berat
-          let options = baseGuruOptionsHtml;
-          if (selectValue) {
-            options = options.replace(`value="${selectValue}"`, `value="${selectValue}" selected`);
-          }
-
-          cellsHtml += `
-            <td>
-              <select data-hari="${w.hari}" data-jam="${w.jam_ke}" data-kelas="${k.id_kelas}" class="jadwal-select form-select form-select-sm">
-                ${options}
-              </select>
-            </td>
-          `;
-        });
-
-        tbodyContentHtml += `
-          <tr>
-            <td class="fw-medium">${w.hari}</td>
-            <td class="fw-bold">${w.jam_ke}</td>
-            <td class="text-secondary font-monospace" style="font-size: 0.75rem;">${waktuDisplay}</td>
-            ${cellsHtml}
-          </tr>
-        `;
-      });
-
-      tbody.innerHTML = tbodyContentHtml;
+  // Bikin Index Map Presisi dengan Kombinasi Hari + Jam_Ke + Index Slot
+  const jadwalMap = {};
+  (GLOBAL_DATA.jadwal || []).forEach(j => {
+    // Key unik mencakup hari, jam_ke, dan id_kelas
+    const key = `${String(j.hari).toLowerCase()}_${j.jam_ke}_${j.id_kelas}`;
+    
+    // Jika ada jam_ke yang sama dalam 1 hari, simpan dalam array slot
+    if (!jadwalMap[key]) {
+      jadwalMap[key] = [];
     }
+    jadwalMap[key].push(j);
+  });
+
+  let tbodyContentHtml = "";
+  
+  // Track index untuk slot jam yang kembar/duplikat
+  const jamKeCounter = {};
+
+  activeWaktu.forEach(w => {
+    let waktuDisplay = w.waktu_str ? w.waktu_str : `${cleanTimeString(w.waktu_mulai)} - ${cleanTimeString(w.waktu_selesai)}`;
+    
+    // Hitung kemunculan jam_ke untuk mencocokkan baris duplikat
+    const jamKey = `${String(w.hari).toLowerCase()}_${w.jam_ke}`;
+    jamKeCounter[jamKey] = (jamKeCounter[jamKey] || 0);
+    const slotIndex = jamKeCounter[jamKey];
+    jamKeCounter[jamKey]++;
+
+    let cellsHtml = "";
+    activeKelas.forEach(k => {
+      const key = `${String(w.hari).toLowerCase()}_${w.jam_ke}_${k.id_kelas}`;
+      const matchedList = jadwalMap[key] || [];
+      const currentJadwal = matchedList[slotIndex] || {};
+
+      let options = baseGuruOptionsHtml;
+
+      if (currentJadwal.id_guru) {
+        const targetIdGuru = String(currentJadwal.id_guru).trim();
+        const targetMapel = currentJadwal.mapel ? String(currentJadwal.mapel).trim() : "";
+
+        // Pencocokan fleksibel: Cek ID Guru & Mapel
+        let matchValue = "";
+        if (targetMapel) {
+          matchValue = `${targetIdGuru}::${targetMapel}`;
+        } else {
+          // Cari guru terkait di master data untuk mengambil kompetensi utamanya
+          const guruObj = (GLOBAL_DATA.guru || []).find(g => String(g.id_guru).trim() === targetIdGuru);
+          if (guruObj) {
+            matchValue = `${targetIdGuru}::${guruObj.kompetensi || 'Utama'}`;
+          }
+        }
+
+        if (matchValue) {
+          options = options.replace(`value="${matchValue}"`, `value="${matchValue}" selected`);
+        }
+      }
+
+      cellsHtml += `
+        <td>
+          <select data-hari="${w.hari}" data-jam="${w.jam_ke}" data-kelas="${k.id_kelas}" class="jadwal-select form-select form-select-sm">
+            ${options}
+          </select>
+        </td>
+      `;
+    });
+
+    tbodyContentHtml += `
+      <tr>
+        <td class="fw-medium">${w.hari}</td>
+        <td class="fw-bold">${w.jam_ke}</td>
+        <td class="text-secondary font-monospace" style="font-size: 0.75rem;">${waktuDisplay}</td>
+        ${cellsHtml}
+      </tr>
+    `;
+  });
+
+  tbody.innerHTML = tbodyContentHtml;
+}
 
     function validateLinierVSNonLinier(showAlert = true) {
       const selects = document.querySelectorAll(".jadwal-select");
