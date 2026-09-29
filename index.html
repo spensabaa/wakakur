@@ -18,8 +18,8 @@
       white-space: nowrap;
     }
     .table-jadwal select {
-      min-width: 140px;
-      max-width: 220px;
+      min-width: 160px;
+      max-width: 240px;
       padding: 4px 6px;
       font-size: 0.8rem;
       text-overflow: ellipsis;
@@ -143,7 +143,6 @@
                   <label class="form-label mb-1 fw-bold text-secondary" style="font-size: 0.75rem;"><i class="fa-solid fa-filter me-1"></i>FILTER KELAS</label>
                   <select id="filterKelas" onchange="renderJadwalMatrix()" class="form-select form-select-sm fw-medium">
                     <option value="ALL">-- Semua Kelas --</option>
-                    <!-- Options Kelas di-populate dari Master_Kelas -->
                   </select>
                 </div>
               </div>
@@ -166,11 +165,9 @@
                     <th style="width: 80px;">HARI</th>
                     <th style="width: 60px;">JAM KE</th>
                     <th style="width: 110px;">WAKTU</th>
-                    <!-- Kolom Kelas dirender via JS -->
                   </tr>
                 </thead>
                 <tbody id="jadwalMatrixBody">
-                  <!-- Matrix Jadwal Loaded via JavaScript -->
                 </tbody>
               </table>
             </div>
@@ -184,7 +181,7 @@
           <div class="card-body d-flex justify-content-between align-items-center py-3">
             <div>
               <h5 class="fw-bold mb-0">Master Data Guru & Tugas Tambahan</h5>
-              <p class="text-muted small mb-0">Kelola informasi guru, NUPTK, NIP, kompetensi, dan beban tugas</p>
+              <p class="text-muted small mb-0">Otomatisasi perhitungan JJM Mengajar & Ekuivalensi Tugas Tambahan</p>
             </div>
             <button onclick="openGuruModal()" class="btn btn-primary btn-sm fw-bold px-3 d-flex align-items-center gap-2">
               <i class="fa-solid fa-user-plus"></i>
@@ -204,15 +201,15 @@
                     <th class="px-3">Nama Guru</th>
                     <th class="px-3">NUPTK</th>
                     <th class="px-3">NIP</th>
-                    <th class="px-3">Kompetensi</th>
+                    <th class="px-3">Kompetensi (Linier)</th>
                     <th class="px-3">Tugas Tambahan</th>
-                    <th class="px-3 text-center">JJM</th>
+                    <th class="px-3 text-center">Ekuivalensi</th>
+                    <th class="px-3 text-center">JJM Plotting</th>
                     <th class="px-3 text-center">Total JJM</th>
                     <th class="px-3 text-center">Aksi</th>
                   </tr>
                 </thead>
                 <tbody id="guruTableBody">
-                  <!-- Data Guru Loaded via JavaScript -->
                 </tbody>
               </table>
             </div>
@@ -228,10 +225,16 @@
               <h5 class="fw-bold mb-0">Pengaturan Waktu Belajar</h5>
               <p class="text-muted small mb-0">Atur durasi jam pelajaran dan jam istirahat</p>
             </div>
-            <button onclick="saveWaktuSetting()" class="btn btn-success btn-sm fw-bold px-3 d-flex align-items-center gap-2">
-              <i class="fa-solid fa-floppy-disk"></i>
-              <span>Simpan Waktu</span>
-            </button>
+            <div class="d-flex gap-2">
+              <button onclick="tambahBarisWaktu()" class="btn btn-primary btn-sm fw-bold px-3 d-flex align-items-center gap-2">
+                <i class="fa-solid fa-plus"></i>
+                <span>Tambah Baris</span>
+              </button>
+              <button onclick="saveWaktuSetting()" class="btn btn-success btn-sm fw-bold px-3 d-flex align-items-center gap-2">
+                <i class="fa-solid fa-floppy-disk"></i>
+                <span>Simpan Waktu</span>
+              </button>
+            </div>
           </div>
         </div>
 
@@ -247,10 +250,10 @@
                     <th>Waktu Selesai</th>
                     <th class="text-center" style="width: 100px;">Istirahat?</th>
                     <th>Keterangan</th>
+                    <th class="text-center" style="width: 60px;">Aksi</th>
                   </tr>
                 </thead>
                 <tbody id="waktuTableBody">
-                  <!-- Data Setting Waktu Loaded via JavaScript -->
                 </tbody>
               </table>
             </div>
@@ -291,22 +294,13 @@
               </div>
             </div>
             <div class="mb-2">
-              <label class="form-label fw-bold mb-1">Kompetensi / Mapel Utama</label>
-              <input type="text" id="guru_kompetensi" class="form-control form-control-sm">
+              <label class="form-label fw-bold mb-1">Kompetensi / Mapel Utama (Linier)</label>
+              <input type="text" id="guru_kompetensi" required placeholder="misal: IPA / Matematika / Bahasa Indonesia" class="form-control form-control-sm">
             </div>
             <div class="mb-2">
               <label class="form-label fw-bold mb-1">Tugas Tambahan</label>
-              <input type="text" id="guru_tugas_tambahan" placeholder="misal: Wali Kelas / Pembina OSIS" class="form-control form-control-sm">
-            </div>
-            <div class="row g-2 mb-2">
-              <div class="col-6">
-                <label class="form-label fw-bold mb-1">JJM Mengajar</label>
-                <input type="number" id="guru_jjm_mengajar" value="0" class="form-control form-control-sm">
-              </div>
-              <div class="col-6">
-                <label class="form-label fw-bold mb-1">Total JJM</label>
-                <input type="number" id="guru_total_jjm" value="0" class="form-control form-control-sm">
-              </div>
+              <input type="text" id="guru_tugas_tambahan" placeholder="misal: Wakasek / Wali Kelas / Pembina OSIS" class="form-control form-control-sm">
+              <div class="form-text text-muted" style="font-size: 0.7rem;">Wakasek = 12 JP, Wali Kelas/OSIS/Lab/Perpustakaan = 2 JP.</div>
             </div>
           </div>
           <div class="modal-footer py-2">
@@ -325,6 +319,12 @@
   <script>
     let GLOBAL_DATA = { guru: [], kelas: [], waktu: [], jadwal: [] };
     let bsGuruModal = null;
+
+    // LIST MAPEL TERSIMPAL DARI INTERFASE (Digunakan untuk penentuan mapel linier vs non-linier)
+    const LIST_MAPEL = [
+      "IPA", "IPS", "Matematika", "Bahasa Indonesia", "Bahasa Inggris", 
+      "PPKn", "PAI", "PJOK", "Seni Budaya", "Informatika", "Pancasila", "Sunda/Jawa"
+    ];
 
     document.addEventListener("DOMContentLoaded", () => {
       bsGuruModal = new bootstrap.Modal(document.getElementById('guruModal'));
@@ -439,6 +439,41 @@
         btn.className = "nav-link btn-sm";
       });
       document.getElementById(btnMap[tabId]).className = "nav-link active btn-sm";
+
+      if (tabId === 'tabGuru') {
+        renderGuruTable(); // Re-render JJM otomatis real-time
+      }
+    }
+
+    // HELPER: KONVERSI TUGAS TAMBAHAN KE JAM (EKUIVALENSI)
+    function hitungEkuivalensiTugas(tugas) {
+      if (!tugas) return 0;
+      const t = tugas.toLowerCase();
+      if (t.includes("wakasek") || t.includes("wakil kepala")) return 12;
+      if (t.includes("wali kelas") || t.includes("walikelas")) return 2;
+      if (t.includes("osis") || t.includes("lab") || t.includes("perpustakaan")) return 2;
+      return 0;
+    }
+
+    // HELPER: HITUNG JJM DARI PLOTTING STATE TERBARU
+    function hitungJJMPlottingGuru(idGuru) {
+      let count = 0;
+      // Hitung dari select element di DOM (real-time aktif) jika sedang di tab jadwal
+      const selects = document.querySelectorAll(".jadwal-select");
+      if (selects.length > 0) {
+        selects.forEach(s => {
+          if (s.value) {
+            const parts = s.value.split("::");
+            if (parts[0] === String(idGuru)) count++;
+          }
+        });
+      } else {
+        // Fallback ke GLOBAL_DATA.jadwal
+        (GLOBAL_DATA.jadwal || []).forEach(j => {
+          if (String(j.id_guru) === String(idGuru)) count++;
+        });
+      }
+      return count;
     }
 
     // 4. TAB DATA GURU
@@ -447,11 +482,15 @@
       tbody.innerHTML = "";
 
       if (!GLOBAL_DATA.guru || GLOBAL_DATA.guru.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="10" class="p-4 text-center text-muted">Belum ada data guru di sheet Master_Guru</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="11" class="p-4 text-center text-muted">Belum ada data guru di sheet Master_Guru</td></tr>`;
         return;
       }
 
       GLOBAL_DATA.guru.forEach(g => {
+        const jjmPlotting = hitungJJMPlottingGuru(g.id_guru);
+        const ekuivalensi = hitungEkuivalensiTugas(g.tugas_tambahan);
+        const totalJJM = jjmPlotting + ekuivalensi;
+
         tbody.innerHTML += `
           <tr>
             <td class="px-3 font-monospace text-secondary">${g.id_guru || '-'}</td>
@@ -459,10 +498,11 @@
             <td class="px-3 fw-medium">${g.nama_guru || '-'}</td>
             <td class="px-3 font-monospace text-secondary">${g.nuptk || '-'}</td>
             <td class="px-3 font-monospace text-secondary">${g.nip || '-'}</td>
-            <td class="px-3">${g.kompetensi || '-'}</td>
+            <td class="px-3"><span class="badge bg-info-subtle text-info border border-info">${g.kompetensi || '-'}</span></td>
             <td class="px-3 text-secondary">${g.tugas_tambahan || '-'}</td>
-            <td class="px-3 text-center fw-bold">${g.jjm_mengajar || 0}</td>
-            <td class="px-3 text-center fw-bold text-primary">${g.total_jjm || 0}</td>
+            <td class="px-3 text-center fw-semibold text-secondary">+${ekuivalensi} JP</td>
+            <td class="px-3 text-center fw-bold text-dark">${jjmPlotting} JP</td>
+            <td class="px-3 text-center fw-bold text-primary fs-6">${totalJJM} JP</td>
             <td class="px-3 text-center">
               <button onclick='editGuru(${JSON.stringify(g)})' class="btn btn-warning btn-sm py-0 px-2 me-1"><i class="fa-solid fa-pen"></i></button>
               <button onclick="deleteGuru('${g.id_guru}')" class="btn btn-danger btn-sm py-0 px-2"><i class="fa-solid fa-trash"></i></button>
@@ -487,8 +527,6 @@
       document.getElementById("guru_nip").value = g.nip || "";
       document.getElementById("guru_kompetensi").value = g.kompetensi || "";
       document.getElementById("guru_tugas_tambahan").value = g.tugas_tambahan || "";
-      document.getElementById("guru_jjm_mengajar").value = g.jjm_mengajar || 0;
-      document.getElementById("guru_total_jjm").value = g.total_jjm || 0;
       document.getElementById("guruModalTitle").innerText = "Edit Data Guru";
       bsGuruModal.show();
     }
@@ -502,9 +540,7 @@
         nuptk: document.getElementById("guru_nuptk").value,
         nip: document.getElementById("guru_nip").value,
         kompetensi: document.getElementById("guru_kompetensi").value,
-        tugas_tambahan: document.getElementById("guru_tugas_tambahan").value,
-        jjm_mengajar: parseInt(document.getElementById("guru_jjm_mengajar").value) || 0,
-        total_jjm: parseInt(document.getElementById("guru_total_jjm").value) || 0
+        tugas_tambahan: document.getElementById("guru_tugas_tambahan").value
       };
 
       await fetch(GAS_URL, {
@@ -532,21 +568,83 @@
 
       const waktuData = GLOBAL_DATA.waktu || [];
 
+      if (waktuData.length === 0) {
+        tambahBarisWaktu();
+        return;
+      }
+
       waktuData.forEach((w) => {
         const wMulai = cleanTimeString(w.waktu_mulai);
         const wSelesai = cleanTimeString(w.waktu_selesai);
 
         tbody.innerHTML += `
           <tr class="waktu-row">
-            <td><input type="text" value="${w.hari}" class="form-control form-control-sm w-hari"></td>
+            <td><input type="text" value="${w.hari || 'Senin'}" class="form-control form-control-sm w-hari"></td>
             <td><input type="number" value="${w.jam_ke}" class="form-control form-control-sm w-jam"></td>
             <td><input type="time" value="${wMulai}" class="form-control form-control-sm w-mulai"></td>
             <td><input type="time" value="${wSelesai}" class="form-control form-control-sm w-selesai"></td>
-            <td class="text-center"><input type="checkbox" ${w.is_istirahat ? 'checked' : ''} class="form-check-input w-istirahat"></td>
+            <td class="text-center"><input type="checkbox" ${w.is_istirahat ? 'checked' : ''} onchange="toggleIstirahat(this)" class="form-check-input w-istirahat"></td>
             <td><input type="text" value="${w.keterangan || ''}" class="form-control form-control-sm w-ket"></td>
+            <td class="text-center">
+              <button type="button" class="btn btn-outline-danger btn-sm py-0 px-2" onclick="hapusBarisWaktu(this)" title="Hapus Baris">
+                <i class="fa-solid fa-trash"></i>
+              </button>
+            </td>
           </tr>
         `;
       });
+    }
+
+    function tambahBarisWaktu() {
+      const tbody = document.getElementById("waktuTableBody");
+      const totalBaris = tbody.rows.length + 1;
+
+      let defaultHari = "Senin";
+      if (tbody.rows.length > 0) {
+        const lastRowHari = tbody.rows[tbody.rows.length - 1].querySelector(".w-hari").value;
+        if (lastRowHari) defaultHari = lastRowHari;
+      }
+
+      const tr = document.createElement("tr");
+      tr.className = "waktu-row";
+      tr.innerHTML = `
+        <td><input type="text" value="${defaultHari}" class="form-control form-control-sm w-hari"></td>
+        <td><input type="number" value="${totalBaris}" class="form-control form-control-sm w-jam"></td>
+        <td><input type="time" value="07:00" class="form-control form-control-sm w-mulai"></td>
+        <td><input type="time" value="07:40" class="form-control form-control-sm w-selesai"></td>
+        <td class="text-center"><input type="checkbox" onchange="toggleIstirahat(this)" class="form-check-input w-istirahat"></td>
+        <td><input type="text" value="Jam Ke-${totalBaris}" class="form-control form-control-sm w-ket"></td>
+        <td class="text-center">
+          <button type="button" class="btn btn-outline-danger btn-sm py-0 px-2" onclick="hapusBarisWaktu(this)" title="Hapus Baris">
+            <i class="fa-solid fa-trash"></i>
+          </button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    }
+
+    function hapusBarisWaktu(btn) {
+      const tbody = document.getElementById("waktuTableBody");
+      if (tbody.rows.length > 1) {
+        btn.closest("tr").remove();
+      } else {
+        alert("Tabel waktu harus memiliki minimal 1 baris.");
+      }
+    }
+
+    function toggleIstirahat(checkbox) {
+      const row = checkbox.closest("tr");
+      const inputJam = row.querySelector(".w-jam");
+      const inputKet = row.querySelector(".w-ket");
+
+      if (checkbox.checked) {
+        inputJam.value = 0;
+        inputKet.value = "Istirahat";
+      } else {
+        const rowIndex = row.rowIndex;
+        inputJam.value = rowIndex;
+        inputKet.value = `Jam Ke-${rowIndex}`;
+      }
     }
 
     async function saveWaktuSetting() {
@@ -555,7 +653,7 @@
       rows.forEach(r => {
         list.push({
           hari: r.querySelector(".w-hari").value,
-          jam_ke: parseInt(r.querySelector(".w-jam").value) || 1,
+          jam_ke: parseInt(r.querySelector(".w-jam").value) || 0,
           waktu_mulai: r.querySelector(".w-mulai").value,
           waktu_selesai: r.querySelector(".w-selesai").value,
           is_istirahat: r.querySelector(".w-istirahat").checked,
@@ -563,14 +661,24 @@
         });
       });
 
-      await fetch(GAS_URL, {
-        method: "POST",
-        body: JSON.stringify({ action: "saveWaktuSetting", waktuList: list })
-      });
-      alert("Pengaturan waktu berhasil disimpan ke Sheet Setting_Waktu!");
+      try {
+        const response = await fetch(GAS_URL, {
+          method: "POST",
+          body: JSON.stringify({ action: "saveWaktuSetting", waktuList: list })
+        });
+        const res = await response.json();
+        if (res.status === "success") {
+          alert("Pengaturan waktu berhasil disimpan ke Sheet Setting_Waktu!");
+          loadAllData();
+        } else {
+          alert("Gagal menyimpan: " + res.message);
+        }
+      } catch (e) {
+        alert("Terjadi kesalahan saat menghubungkan ke Google Apps Script.");
+      }
     }
 
-    // 6. TAB PLOTTING JADWAL MATRIX (DEngan FILTER & OPSI NAMA GURU LENGKAP)
+    // 6. TAB PLOTTING JADWAL MATRIX & VALIDASI LINIER VS NON-LINIER
     function renderJadwalMatrix() {
       const headerRow = document.getElementById("jadwalHeaderRow");
       const tbody = document.getElementById("jadwalMatrixBody");
@@ -578,19 +686,16 @@
       const selHari = document.getElementById("filterHari").value;
       const selKelas = document.getElementById("filterKelas").value;
 
-      // Filter Kelas yang akan ditampilkan
       let activeKelas = GLOBAL_DATA.kelas || [];
       if (selKelas !== "ALL") {
         activeKelas = activeKelas.filter(k => String(k.id_kelas) === String(selKelas));
       }
 
-      // Filter Baris Waktu/Hari yang akan ditampilkan
       let activeWaktu = GLOBAL_DATA.waktu || [];
       if (selHari !== "ALL") {
         activeWaktu = activeWaktu.filter(w => String(w.hari).toLowerCase() === String(selHari).toLowerCase());
       }
 
-      // Render Header
       headerRow.innerHTML = `
         <th style="width: 80px;">HARI</th>
         <th style="width: 60px;">JAM KE</th>
@@ -604,11 +709,6 @@
         tbody.innerHTML = `<tr><td colspan="${3 + activeKelas.length}" class="p-4 text-center text-muted">Tidak ada data jadwal yang sesuai dengan filter.</td></tr>`;
         return;
       }
-
-      // Generate Opsi Guru (KODE + NAMA GURU)
-      const guruOptionsHtml = (GLOBAL_DATA.guru || []).map(g => {
-        return `<option value="${g.id_guru}">${g.kode_guru} - ${g.nama_guru}</option>`;
-      }).join('');
 
       activeWaktu.forEach(w => {
         let waktuDisplay = "";
@@ -628,16 +728,26 @@
             String(j.id_kelas) === String(k.id_kelas)
           ) || {};
 
-          // Menyusun Opsi Dropdown Guru per Sel
-          let optionsWithSelected = `<option value="">-- Pilih Guru --</option>`;
+          let optionsWithSelected = `<option value="">-- Pilih Guru & Mapel --</option>`;
           (GLOBAL_DATA.guru || []).forEach(g => {
-            const isSelected = (currentJadwal.id_guru === g.id_guru) ? 'selected' : '';
-            optionsWithSelected += `<option value="${g.id_guru}" ${isSelected}>${g.kode_guru} - ${g.nama_guru}</option>`;
+            // Opsi untuk Mapel Utama (Linier)
+            const valLinier = `${g.id_guru}::${g.kompetensi || 'Utama'}`;
+            const isSelectedLinier = (currentJadwal.id_guru === g.id_guru && (!currentJadwal.mapel || currentJadwal.mapel === g.kompetensi)) ? 'selected' : '';
+            optionsWithSelected += `<option value="${valLinier}" ${isSelectedLinier}>${g.kode_guru} - ${g.nama_guru} (${g.kompetensi || 'Linier'})</option>`;
+
+            // Opsi untuk Mapel Tambahan / Non-Linier
+            LIST_MAPEL.forEach(m => {
+              if (m.toLowerCase() !== (g.kompetensi || '').toLowerCase()) {
+                const valNonLinier = `${g.id_guru}::${m}`;
+                const isSelectedNonLinier = (currentJadwal.id_guru === g.id_guru && currentJadwal.mapel === m) ? 'selected' : '';
+                optionsWithSelected += `<option value="${valNonLinier}" ${isSelectedNonLinier}>↳ ${g.kode_guru} - ${g.nama_guru} [Non-Linier: ${m}]</option>`;
+              }
+            });
           });
 
           cellsHtml += `
             <td>
-              <select data-hari="${w.hari}" data-jam="${w.jam_ke}" data-kelas="${k.id_kelas}" class="jadwal-select form-select form-select-sm">
+              <select data-hari="${w.hari}" data-jam="${w.jam_ke}" data-kelas="${k.id_kelas}" class="jadwal-select form-select form-select-sm" onchange="validateOnFly()">
                 ${optionsWithSelected}
               </select>
             </td>
@@ -655,7 +765,59 @@
       });
     }
 
+    function validateOnFly() {
+      // Pengecekan real-time status linier vs non-linier
+      validateLinierVSNonLinier(false);
+    }
+
+    // FUNGSI LOGIKA VALIDASI GURU MULTI-MAPEL (LINIER VS NON-LINIER)
+    function validateLinierVSNonLinier(showAlert = true) {
+      const selects = document.querySelectorAll(".jadwal-select");
+      const guruMapelStats = {};
+
+      selects.forEach(s => {
+        if (s.value) {
+          const [idGuru, mapel] = s.value.split("::");
+          if (!guruMapelStats[idGuru]) {
+            const guruObj = GLOBAL_DATA.guru.find(g => String(g.id_guru) === String(idGuru)) || {};
+            guruMapelStats[idGuru] = {
+              nama: guruObj.nama_guru || idGuru,
+              kompetensi: (guruObj.kompetensi || '').toLowerCase(),
+              jamLinier: 0,
+              jamNonLinier: 0
+            };
+          }
+
+          if (mapel.toLowerCase() === guruMapelStats[idGuru].kompetensi) {
+            guruMapelStats[idGuru].jamLinier++;
+          } else {
+            guruMapelStats[idGuru].jamNonLinier++;
+          }
+        }
+      });
+
+      // Pengecekan Aturan: Non-Linier TIDAK BOLEH >= Linier (jika ada jam non-linier)
+      const pelanggaran = [];
+      Object.values(guruMapelStats).forEach(stat => {
+        if (stat.jamNonLinier > 0 && stat.jamNonLinier >= stat.jamLinier) {
+          pelanggaran.push(`- ${stat.nama}: Mapel Linier (${stat.jamLinier} JP) vs Non-Linier (${stat.jamNonLinier} JP)`);
+        }
+      });
+
+      if (pelanggaran.length > 0) {
+        if (showAlert) {
+          alert(`⚠️ PERINGATAN DAPODIK!\n\nJumlah jam mengajar non-linier tidak boleh lebih banyak atau sama dengan jam linier demi keamanan Dapodik:\n\n` + pelanggaran.join("\n"));
+        }
+        return false;
+      }
+      return true;
+    }
+
     async function saveJadwalBatch() {
+      // Jalankan Validasi Linier vs Non-Linier sebelum Simpan
+      const isValid = validateLinierVSNonLinier(true);
+      if (!isValid) return; // Hentikan proses simpan jika melanggar
+
       const selects = document.querySelectorAll(".jadwal-select");
       const items = [];
 
@@ -664,11 +826,13 @@
 
       selects.forEach(s => {
         if (s.value) {
+          const [idGuru, mapel] = s.value.split("::");
           items.push({
             hari: s.getAttribute("data-hari"),
             jam_ke: parseInt(s.getAttribute("data-jam")),
             id_kelas: s.getAttribute("data-kelas"),
-            id_guru: s.value
+            id_guru: idGuru,
+            mapel: mapel
           });
         }
       });
