@@ -134,18 +134,16 @@
             <table class="table table-striped align-middle">
               <thead class="table-secondary">
                 <tr>
-                  <th>ID</th>
-                  <th>Kode</th>
+                  <th style="width: 50px;">ID</th>
+                  <th style="width: 70px;">Kode</th>
                   <th>Nama Guru</th>
-                  <th>NUPTK</th>
-                  <th>NIP</th>
                   <th>Kompetensi</th>
                   <th>Tugas Tambahan</th>
                   <th class="text-center">JJM Mengajar</th>
                   <th class="text-center">JJM Tugas</th>
                   <th class="text-center">Total JJM</th>
                   <th class="text-center">Status Sertifikasi</th>
-                  <th class="text-center">Aksi</th>
+                  <th class="text-center" style="width: 90px;">Aksi</th>
                 </tr>
               </thead>
               <tbody id="tabelGuruBody">
@@ -214,11 +212,11 @@
             <div class="row">
               <div class="col-6 mb-2">
                 <label class="form-label">NUPTK</label>
-                <input type="text" id="guruNuptk" class="form-control">
+                <input type="text" id="guruNuptk" class="form-control" placeholder="Isi NUPTK (Opsional)">
               </div>
               <div class="col-6 mb-2">
                 <label class="form-label">NIP</label>
-                <input type="text" id="guruNip" class="form-control">
+                <input type="text" id="guruNip" class="form-control" placeholder="Isi NIP (Opsional)">
               </div>
             </div>
             <div class="mb-2">
@@ -544,7 +542,7 @@
       });
     }
 
-    // --- MASTER GURU ---
+    // --- MASTER GURU (KOLOM NUPTK & NIP DIHAPUS DARI TABEL) ---
     function renderTabelMasterGuru() {
       const tbody = document.getElementById("tabelGuruBody");
       const dataGuru = GLOBAL_DATA.guru || [];
@@ -561,8 +559,6 @@
             <td>${g.id_guru}</td>
             <td><strong>${g.kode_guru}</strong></td>
             <td>${g.nama_guru}</td>
-            <td>${g.nuptk || '-'}</td>
-            <td>${g.nip || '-'}</td>
             <td><span class="badge bg-info text-dark">${g.kompetensi}</span></td>
             <td>${g.tugas_tambahan || '-'}</td>
             <td class="text-center fw-bold">${g.jjm_mengajar} JP</td>
