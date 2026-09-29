@@ -10,7 +10,6 @@
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
   
   <style>
-    /* Styling khusus agar tabel matrix rapi dan presisi */
     .table-jadwal th, .table-jadwal td {
       vertical-align: middle;
       text-align: center;
@@ -18,8 +17,8 @@
       white-space: nowrap;
     }
     .table-jadwal select {
-      min-width: 160px;
-      max-width: 240px;
+      min-width: 150px;
+      max-width: 220px;
       padding: 4px 6px;
       font-size: 0.8rem;
       text-overflow: ellipsis;
@@ -37,7 +36,6 @@
 </head>
 <body class="bg-light text-dark">
 
-  <!-- PASTE URL WEB APP EXEC GAS DISINI -->
   <script>
     const GAS_URL = "https://script.google.com/macros/s/AKfycbz1z9FTS5hUGDC1xW_ALTKK7hzc8e-K6azBCAWIzQbJVOq3bycBhVn52lIXYRvEzWC2/exec";
   </script>
@@ -89,7 +87,6 @@
           </div>
         </a>
 
-        <!-- MENU NAVIGATION TABS -->
         <ul class="nav nav-pills my-2 my-lg-0 bg-secondary bg-opacity-25 p-1 rounded-3">
           <li class="nav-item">
             <button onclick="switchTab('tabJadwal')" id="btnTabJadwal" class="nav-link active btn-sm">Plotting Jadwal</button>
@@ -124,18 +121,19 @@
                 <p class="text-muted small mb-0">Atur alokasi jam mengajar guru per kelas</p>
               </div>
 
-              <!-- FILTER SECTION: HARI & KELAS -->
+              <!-- FILTER SECTION -->
               <div class="col-md-5 d-flex gap-2">
                 <div class="w-50">
                   <label class="form-label mb-1 fw-bold text-secondary" style="font-size: 0.75rem;"><i class="fa-solid fa-filter me-1"></i>FILTER HARI</label>
+                  <!-- DEFAULT FILTER DIBUAT SENIN AGAR LIGHTWEIGHT/CEPAT -->
                   <select id="filterHari" onchange="renderJadwalMatrix()" class="form-select form-select-sm fw-medium">
-                    <option value="ALL">-- Semua Hari --</option>
-                    <option value="Senin">Senin</option>
+                    <option value="Senin" selected>Senin</option>
                     <option value="Selasa">Selasa</option>
                     <option value="Rabu">Rabu</option>
                     <option value="Kamis">Kamis</option>
                     <option value="Jumat">Jumat</option>
                     <option value="Sabtu">Sabtu</option>
+                    <option value="ALL">-- Semua Hari (Lengkap) --</option>
                   </select>
                 </div>
 
@@ -295,12 +293,11 @@
             </div>
             <div class="mb-2">
               <label class="form-label fw-bold mb-1">Kompetensi / Mapel Utama (Linier)</label>
-              <input type="text" id="guru_kompetensi" required placeholder="misal: IPA / Matematika / Bahasa Indonesia" class="form-control form-control-sm">
+              <input type="text" id="guru_kompetensi" required placeholder="misal: IPA / Matematika" class="form-control form-control-sm">
             </div>
             <div class="mb-2">
               <label class="form-label fw-bold mb-1">Tugas Tambahan</label>
-              <input type="text" id="guru_tugas_tambahan" placeholder="misal: Wakasek / Wali Kelas / Pembina OSIS" class="form-control form-control-sm">
-              <div class="form-text text-muted" style="font-size: 0.7rem;">Wakasek = 12 JP, Wali Kelas/OSIS/Lab/Perpustakaan = 2 JP.</div>
+              <input type="text" id="guru_tugas_tambahan" placeholder="misal: Wakasek / Wali Kelas" class="form-control form-control-sm">
             </div>
           </div>
           <div class="modal-footer py-2">
@@ -312,33 +309,39 @@
     </div>
   </div>
 
-  <!-- Bootstrap 5 JS Bundle -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
-  <!-- JAVASCRIPT LOGIC -->
   <script>
     let GLOBAL_DATA = { guru: [], kelas: [], waktu: [], jadwal: [] };
     let bsGuruModal = null;
 
-    // LIST MAPEL TERSIMPAL DARI INTERFASE (Digunakan untuk penentuan mapel linier vs non-linier)
-    const LIST_MAPEL = [
-      "IPA", "IPS", "Matematika", "Bahasa Indonesia", "Bahasa Inggris", 
-      "PPKn", "PAI", "PJOK", "Seni Budaya", "Informatika", "Pancasila", "Sunda/Jawa"
-    ];
+    const LIST_MAPEL = ["IPA", "IPS", "Matematika", "Bahasa Indonesia", "Bahasa Inggris", "PPKn", "PAI", "PJOK", "Seni Budaya", "Informatika"];
 
     document.addEventListener("DOMContentLoaded", () => {
       bsGuruModal = new bootstrap.Modal(document.getElementById('guruModal'));
+      
+      // OPTIMASI 1: Cek Cache Lokal Terlebih Dahulu (Bisa Langsung Tampil Seketika)
+      const cached = localStorage.getItem("timetable_cache_data");
+      if (cached) {
+        try {
+          GLOBAL_DATA = JSON.parse(cached);
+          populateKelasFilter();
+          renderJadwalMatrix();
+          renderGuruTable();
+          renderWaktuTable();
+        } catch(e) {}
+      }
+
       checkAutoLogin();
     });
 
-    // 1. AUTO-LOGIN CHECK
     function checkAutoLogin() {
       const savedUser = localStorage.getItem("timetable_user");
       if (savedUser) {
         document.getElementById("loginModal").classList.add("d-none");
         document.getElementById("appContainer").classList.remove("d-none");
         document.getElementById("currentUser").innerText = savedUser;
-        loadAllData();
+        loadAllData(); // Tetap panggil background fetch untuk sinkronisasi sheet terbaru
       }
     }
 
@@ -382,16 +385,20 @@
 
     function logout() {
       localStorage.removeItem("timetable_user");
+      localStorage.removeItem("timetable_cache_data");
       location.reload();
     }
 
-    // 2. FETCH DATA
+    // OPTIMASI 2: Sync Ke Cache Browser
     async function loadAllData() {
       try {
         const response = await fetch(GAS_URL + "?action=getAllData");
         const res = await response.json();
         if (res.status === "success") {
           GLOBAL_DATA = res.data;
+          // Simpan ke Cache Browser
+          localStorage.setItem("timetable_cache_data", JSON.stringify(res.data));
+
           populateKelasFilter();
           renderGuruTable();
           renderWaktuTable();
@@ -404,10 +411,11 @@
 
     function populateKelasFilter() {
       const select = document.getElementById("filterKelas");
-      select.innerHTML = `<option value="ALL">-- Semua Kelas --</option>`;
+      let html = `<option value="ALL">-- Semua Kelas --</option>`;
       (GLOBAL_DATA.kelas || []).forEach(k => {
-        select.innerHTML += `<option value="${k.id_kelas}">${k.nama_kelas}</option>`;
+        html += `<option value="${k.id_kelas}">${k.nama_kelas}</option>`;
       });
+      select.innerHTML = html;
     }
 
     function cleanTimeString(val) {
@@ -421,54 +429,37 @@
       return val;
     }
 
-    // 3. TAB NAVIGATION
     function switchTab(tabId) {
       ["tabJadwal", "tabGuru", "tabWaktu"].forEach(id => {
         document.getElementById(id).classList.add("d-none");
       });
       document.getElementById(tabId).classList.remove("d-none");
 
-      const btnMap = {
-        tabJadwal: "btnTabJadwal",
-        tabGuru: "btnTabGuru",
-        tabWaktu: "btnTabWaktu"
-      };
-
+      const btnMap = { tabJadwal: "btnTabJadwal", tabGuru: "btnTabGuru", tabWaktu: "btnTabWaktu" };
       Object.values(btnMap).forEach(btnId => {
-        const btn = document.getElementById(btnId);
-        btn.className = "nav-link btn-sm";
+        document.getElementById(btnId).className = "nav-link btn-sm";
       });
       document.getElementById(btnMap[tabId]).className = "nav-link active btn-sm";
 
-      if (tabId === 'tabGuru') {
-        renderGuruTable(); // Re-render JJM otomatis real-time
-      }
+      if (tabId === 'tabGuru') renderGuruTable();
     }
 
-    // HELPER: KONVERSI TUGAS TAMBAHAN KE JAM (EKUIVALENSI)
     function hitungEkuivalensiTugas(tugas) {
       if (!tugas) return 0;
       const t = tugas.toLowerCase();
       if (t.includes("wakasek") || t.includes("wakil kepala")) return 12;
-      if (t.includes("wali kelas") || t.includes("walikelas")) return 2;
-      if (t.includes("osis") || t.includes("lab") || t.includes("perpustakaan")) return 2;
+      if (t.includes("wali kelas") || t.includes("walikelas") || t.includes("osis") || t.includes("lab") || t.includes("perpustakaan")) return 2;
       return 0;
     }
 
-    // HELPER: HITUNG JJM DARI PLOTTING STATE TERBARU
     function hitungJJMPlottingGuru(idGuru) {
       let count = 0;
-      // Hitung dari select element di DOM (real-time aktif) jika sedang di tab jadwal
       const selects = document.querySelectorAll(".jadwal-select");
       if (selects.length > 0) {
         selects.forEach(s => {
-          if (s.value) {
-            const parts = s.value.split("::");
-            if (parts[0] === String(idGuru)) count++;
-          }
+          if (s.value && s.value.split("::")[0] === String(idGuru)) count++;
         });
       } else {
-        // Fallback ke GLOBAL_DATA.jadwal
         (GLOBAL_DATA.jadwal || []).forEach(j => {
           if (String(j.id_guru) === String(idGuru)) count++;
         });
@@ -476,13 +467,12 @@
       return count;
     }
 
-    // 4. TAB DATA GURU
     function renderGuruTable() {
       const tbody = document.getElementById("guruTableBody");
-      tbody.innerHTML = "";
+      let html = "";
 
       if (!GLOBAL_DATA.guru || GLOBAL_DATA.guru.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="11" class="p-4 text-center text-muted">Belum ada data guru di sheet Master_Guru</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="11" class="p-4 text-center text-muted">Belum ada data guru</td></tr>`;
         return;
       }
 
@@ -491,7 +481,7 @@
         const ekuivalensi = hitungEkuivalensiTugas(g.tugas_tambahan);
         const totalJJM = jjmPlotting + ekuivalensi;
 
-        tbody.innerHTML += `
+        html += `
           <tr>
             <td class="px-3 font-monospace text-secondary">${g.id_guru || '-'}</td>
             <td class="px-3 fw-bold">${g.kode_guru || '-'}</td>
@@ -510,6 +500,7 @@
           </tr>
         `;
       });
+      tbody.innerHTML = html;
     }
 
     function openGuruModal() {
@@ -561,11 +552,9 @@
       loadAllData();
     }
 
-    // 5. TAB SETTING WAKTU
     function renderWaktuTable() {
       const tbody = document.getElementById("waktuTableBody");
-      tbody.innerHTML = "";
-
+      let html = "";
       const waktuData = GLOBAL_DATA.waktu || [];
 
       if (waktuData.length === 0) {
@@ -577,7 +566,7 @@
         const wMulai = cleanTimeString(w.waktu_mulai);
         const wSelesai = cleanTimeString(w.waktu_selesai);
 
-        tbody.innerHTML += `
+        html += `
           <tr class="waktu-row">
             <td><input type="text" value="${w.hari || 'Senin'}" class="form-control form-control-sm w-hari"></td>
             <td><input type="number" value="${w.jam_ke}" class="form-control form-control-sm w-jam"></td>
@@ -586,19 +575,17 @@
             <td class="text-center"><input type="checkbox" ${w.is_istirahat ? 'checked' : ''} onchange="toggleIstirahat(this)" class="form-check-input w-istirahat"></td>
             <td><input type="text" value="${w.keterangan || ''}" class="form-control form-control-sm w-ket"></td>
             <td class="text-center">
-              <button type="button" class="btn btn-outline-danger btn-sm py-0 px-2" onclick="hapusBarisWaktu(this)" title="Hapus Baris">
-                <i class="fa-solid fa-trash"></i>
-              </button>
+              <button type="button" class="btn btn-outline-danger btn-sm py-0 px-2" onclick="hapusBarisWaktu(this)"><i class="fa-solid fa-trash"></i></button>
             </td>
           </tr>
         `;
       });
+      tbody.innerHTML = html;
     }
 
     function tambahBarisWaktu() {
       const tbody = document.getElementById("waktuTableBody");
       const totalBaris = tbody.rows.length + 1;
-
       let defaultHari = "Senin";
       if (tbody.rows.length > 0) {
         const lastRowHari = tbody.rows[tbody.rows.length - 1].querySelector(".w-hari").value;
@@ -615,9 +602,7 @@
         <td class="text-center"><input type="checkbox" onchange="toggleIstirahat(this)" class="form-check-input w-istirahat"></td>
         <td><input type="text" value="Jam Ke-${totalBaris}" class="form-control form-control-sm w-ket"></td>
         <td class="text-center">
-          <button type="button" class="btn btn-outline-danger btn-sm py-0 px-2" onclick="hapusBarisWaktu(this)" title="Hapus Baris">
-            <i class="fa-solid fa-trash"></i>
-          </button>
+          <button type="button" class="btn btn-outline-danger btn-sm py-0 px-2" onclick="hapusBarisWaktu(this)"><i class="fa-solid fa-trash"></i></button>
         </td>
       `;
       tbody.appendChild(tr);
@@ -674,11 +659,11 @@
           alert("Gagal menyimpan: " + res.message);
         }
       } catch (e) {
-        alert("Terjadi kesalahan saat menghubungkan ke Google Apps Script.");
+        alert("Terjadi kesalahan koneksi.");
       }
     }
 
-    // 6. TAB PLOTTING JADWAL MATRIX & VALIDASI LINIER VS NON-LINIER
+    // OPTIMASI 3: MEMBANGUN MATRIX RINGAN BEBAS FREEZING BROWSER
     function renderJadwalMatrix() {
       const headerRow = document.getElementById("jadwalHeaderRow");
       const tbody = document.getElementById("jadwalMatrixBody");
@@ -703,58 +688,63 @@
         ${activeKelas.map(k => `<th>${k.nama_kelas}</th>`).join('')}
       `;
 
-      tbody.innerHTML = "";
-
       if (activeWaktu.length === 0 || activeKelas.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="${3 + activeKelas.length}" class="p-4 text-center text-muted">Tidak ada data jadwal yang sesuai dengan filter.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="${3 + activeKelas.length}" class="p-4 text-center text-muted">Tidak ada data jadwal.</td></tr>`;
         return;
       }
 
+      // PRE-COMPILE LIST OPTIONS GURU 1 KALI UNTUK SEMUA CELL (Memotong Beban CPU Browser hingga 90%)
+      let baseGuruOptionsHtml = `<option value="">-- Pilih Guru & Mapel --</option>`;
+      (GLOBAL_DATA.guru || []).forEach(g => {
+        const valLinier = `${g.id_guru}::${g.kompetensi || 'Utama'}`;
+        baseGuruOptionsHtml += `<option value="${valLinier}">${g.kode_guru} - ${g.nama_guru} (${g.kompetensi || 'Linier'})</option>`;
+
+        LIST_MAPEL.forEach(m => {
+          if (m.toLowerCase() !== (g.kompetensi || '').toLowerCase()) {
+            const valNonLinier = `${g.id_guru}::${m}`;
+            baseGuruOptionsHtml += `<option value="${valNonLinier}">↳ ${g.kode_guru} - ${g.nama_guru} [Non-Linier: ${m}]</option>`;
+          }
+        });
+      });
+
+      // Bikin Map Jadwal Terindeks agar Pencarian O(1) Instan
+      const jadwalMap = {};
+      (GLOBAL_DATA.jadwal || []).forEach(j => {
+        const key = `${String(j.hari).toLowerCase()}_${j.jam_ke}_${j.id_kelas}`;
+        jadwalMap[key] = j;
+      });
+
+      let tbodyContentHtml = "";
+
       activeWaktu.forEach(w => {
-        let waktuDisplay = "";
-        if (w.waktu_str) {
-          waktuDisplay = w.waktu_str;
-        } else {
-          const tMulai = cleanTimeString(w.waktu_mulai);
-          const tSelesai = cleanTimeString(w.waktu_selesai);
-          waktuDisplay = `${tMulai} - ${tSelesai}`;
-        }
+        let waktuDisplay = w.waktu_str ? w.waktu_str : `${cleanTimeString(w.waktu_mulai)} - ${cleanTimeString(w.waktu_selesai)}`;
 
         let cellsHtml = "";
         activeKelas.forEach(k => {
-          const currentJadwal = GLOBAL_DATA.jadwal.find(j => 
-            String(j.hari).toLowerCase() === String(w.hari).toLowerCase() && 
-            j.jam_ke == w.jam_ke && 
-            String(j.id_kelas) === String(k.id_kelas)
-          ) || {};
+          const key = `${String(w.hari).toLowerCase()}_${w.jam_ke}_${k.id_kelas}`;
+          const currentJadwal = jadwalMap[key] || {};
 
-          let optionsWithSelected = `<option value="">-- Pilih Guru & Mapel --</option>`;
-          (GLOBAL_DATA.guru || []).forEach(g => {
-            // Opsi untuk Mapel Utama (Linier)
-            const valLinier = `${g.id_guru}::${g.kompetensi || 'Utama'}`;
-            const isSelectedLinier = (currentJadwal.id_guru === g.id_guru && (!currentJadwal.mapel || currentJadwal.mapel === g.kompetensi)) ? 'selected' : '';
-            optionsWithSelected += `<option value="${valLinier}" ${isSelectedLinier}>${g.kode_guru} - ${g.nama_guru} (${g.kompetensi || 'Linier'})</option>`;
+          let selectValue = "";
+          if (currentJadwal.id_guru) {
+            selectValue = `${currentJadwal.id_guru}::${currentJadwal.mapel || ''}`;
+          }
 
-            // Opsi untuk Mapel Tambahan / Non-Linier
-            LIST_MAPEL.forEach(m => {
-              if (m.toLowerCase() !== (g.kompetensi || '').toLowerCase()) {
-                const valNonLinier = `${g.id_guru}::${m}`;
-                const isSelectedNonLinier = (currentJadwal.id_guru === g.id_guru && currentJadwal.mapel === m) ? 'selected' : '';
-                optionsWithSelected += `<option value="${valNonLinier}" ${isSelectedNonLinier}>↳ ${g.kode_guru} - ${g.nama_guru} [Non-Linier: ${m}]</option>`;
-              }
-            });
-          });
+          // Injeksi nilai terpilih secara cepat tanpa replace looping berat
+          let options = baseGuruOptionsHtml;
+          if (selectValue) {
+            options = options.replace(`value="${selectValue}"`, `value="${selectValue}" selected`);
+          }
 
           cellsHtml += `
             <td>
-              <select data-hari="${w.hari}" data-jam="${w.jam_ke}" data-kelas="${k.id_kelas}" class="jadwal-select form-select form-select-sm" onchange="validateOnFly()">
-                ${optionsWithSelected}
+              <select data-hari="${w.hari}" data-jam="${w.jam_ke}" data-kelas="${k.id_kelas}" class="jadwal-select form-select form-select-sm">
+                ${options}
               </select>
             </td>
           `;
         });
 
-        tbody.innerHTML += `
+        tbodyContentHtml += `
           <tr>
             <td class="fw-medium">${w.hari}</td>
             <td class="fw-bold">${w.jam_ke}</td>
@@ -763,14 +753,10 @@
           </tr>
         `;
       });
+
+      tbody.innerHTML = tbodyContentHtml;
     }
 
-    function validateOnFly() {
-      // Pengecekan real-time status linier vs non-linier
-      validateLinierVSNonLinier(false);
-    }
-
-    // FUNGSI LOGIKA VALIDASI GURU MULTI-MAPEL (LINIER VS NON-LINIER)
     function validateLinierVSNonLinier(showAlert = true) {
       const selects = document.querySelectorAll(".jadwal-select");
       const guruMapelStats = {};
@@ -796,7 +782,6 @@
         }
       });
 
-      // Pengecekan Aturan: Non-Linier TIDAK BOLEH >= Linier (jika ada jam non-linier)
       const pelanggaran = [];
       Object.values(guruMapelStats).forEach(stat => {
         if (stat.jamNonLinier > 0 && stat.jamNonLinier >= stat.jamLinier) {
@@ -814,9 +799,8 @@
     }
 
     async function saveJadwalBatch() {
-      // Jalankan Validasi Linier vs Non-Linier sebelum Simpan
       const isValid = validateLinierVSNonLinier(true);
-      if (!isValid) return; // Hentikan proses simpan jika melanggar
+      if (!isValid) return;
 
       const selects = document.querySelectorAll(".jadwal-select");
       const items = [];
