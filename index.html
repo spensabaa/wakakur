@@ -873,14 +873,86 @@
 
     function printJadwalMatrix() {
       const selHari = document.getElementById("filterHari").value;
+      const selKelasVal = document.getElementById("filterKelas").value;
       const selKelasText = document.getElementById("filterKelas").options[document.getElementById("filterKelas").selectedIndex].text;
       
-      // Ambil elemen tabel matrix jadwal yang sedang aktif
-      const matrixTableHTML = document.querySelector(".table-matrix").outerHTML;
-
-      // Buat jendela cetak baru (Print Window)
-      const printWindow = window.open('', '_blank', 'width=900,height=650');
+      // Jika filter kelas "Semua Kelas", render ulang tabel sementara secara hidden agar data lengkap ter-load
+      const originalKelasVal = selKelasVal;
       
+      // Buat salinan tabel matriks khusus untuk cetak
+      // Kita buat elemen tabel secara dinamis agar bisa meringkas teks dropdown menjadi HANYA KODE GURU
+      let activeKelas = GLOBAL_DATA.kelas || [];
+      if (selKelasVal !== "ALL") {
+        activeKelas = activeKelas.filter(k => String(k.id_kelas) === String(selKelasVal));
+      }
+
+      let activeWaktu = GLOBAL_DATA.waktu || [];
+      if (selHari !== "ALL") {
+        activeWaktu = activeWaktu.filter(w => String(w.hari).toLowerCase() === String(selHari).toLowerCase());
+      }
+
+      let printHeaderHtml = `
+        <th style="width: 70px;">HARI</th>
+        <th style="width: 50px;">JAM</th>
+        <th style="width: 90px;">WAKTU</th>
+        ${activeKelas.map(k => `<th>${k.nama_kelas}</th>`).join('')}
+      `;
+
+      const jadwalMap = {};
+      (GLOBAL_DATA.jadwal || []).forEach(j => {
+        const key = `${String(j.hari).toLowerCase()}_${j.jam_ke}_${j.id_kelas}`;
+        if (!jadwalMap[key]) jadwalMap[key] = [];
+        jadwalMap[key].push(j);
+      });
+
+      let printBodyHtml = "";
+      const jamKeCounter = {};
+
+      activeWaktu.forEach(w => {
+        let waktuDisplay = `${cleanTimeString(w.waktu_mulai)} - ${cleanTimeString(w.waktu_selesai)}`;
+        const jamKey = `${String(w.hari).toLowerCase()}_${w.jam_ke}`;
+        jamKeCounter[jamKey] = (jamKeCounter[jamKey] || 0);
+        const slotIndex = jamKeCounter[jamKey];
+        jamKeCounter[jamKey]++;
+
+        let cellsHtml = "";
+        activeKelas.forEach(k => {
+          const key = `${String(w.hari).toLowerCase()}_${w.jam_ke}_${k.id_kelas}`;
+          const matchedList = jadwalMap[key] || [];
+          const currentJadwal = matchedList[slotIndex] || {};
+
+          let cellText = "-";
+          if (currentJadwal.id_guru) {
+            const guruObj = (GLOBAL_DATA.guru || []).find(g => String(g.id_guru).trim() === String(currentJadwal.id_guru).trim());
+            if (guruObj) {
+              cellText = `<strong>${guruObj.kode_guru}</strong>`;
+            }
+          }
+
+          cellsHtml += `<td style="text-align: center; font-size: 0.75rem; vertical-align: middle;">${cellText}</td>`;
+        });
+
+        printBodyHtml += `
+          <tr>
+            <td style="text-align: center; vertical-align: middle;">${w.hari}</td>
+            <td style="text-align: center; vertical-align: middle;"><b>${w.jam_ke}</b></td>
+            <td style="text-align: center; font-size: 0.7rem; vertical-align: middle;">${waktuDisplay}</td>
+            ${cellsHtml}
+          </tr>
+        `;
+      });
+
+      const customTableHTML = `
+        <table class="table table-bordered table-sm table-matrix">
+          <thead class="table-dark">
+            <tr>${printHeaderHtml}</tr>
+          </thead>
+          <tbody>${printBodyHtml}</tbody>
+        </table>
+      `;
+
+      // Buka Jendela Cetak
+      const printWindow = window.open('', '_blank', 'width=1000,height=700');
       printWindow.document.write(`
         <!DOCTYPE html>
         <html lang="id">
@@ -889,10 +961,9 @@
           <title>Cetak Jadwal Pelajaran - SIM TimeTable</title>
           <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
           <style>
-            body { padding: 20px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #000; }
-            h3, p { text-align: center; margin-bottom: 5px; }
-            .table-matrix th, .table-matrix td { vertical-align: middle; text-align: center; font-size: 0.75rem !important; border: 1px solid #000 !important; padding: 4px !important; }
-            .table-matrix select { border: none; background: transparent; appearance: none; font-weight: bold; text-align: center; width: 100%; }
+            body { padding: 15px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #000; }
+            h3, h4, p { text-align: center; margin: 2px 0; }
+            .table-matrix th, .table-matrix td { border: 1px solid #000 !important; padding: 4px !important; }
             @media print {
               .no-print { display: none; }
               @page { size: landscape; }
@@ -901,16 +972,13 @@
         </head>
         <body>
           <div class="container-fluid">
-            <h3 class="fw-bold">PEMERINTAH KABUPATEN MOJOKERTO</h3>
-            <h4 class="fw-bold text-uppercase">SMP NEGERI 1 BANGSAL</h4>
-            <p class="text-muted small">Jadwal Pelajaran Tahun Ajaran Berjalan | Filter Hari: <strong>${selHari}</strong> | Kelas: <strong>${selKelasText}</strong></p>
-            <hr class="mb-4">
+            <h4 class="fw-bold">PEMERINTAH KABUPATEN MOJOKERTO</h4>
+            <h3 class="fw-bold text-uppercase">SMP NEGERI 1 BANGSAL</h3>
+            <p class="text-muted small mb-3">Jadwal Pelajaran Tahun Ajaran Berjalan | Hari: <strong>${selHari}</strong> | Kelas: <strong>${selKelasText}</strong></p>
             
-            <div class="table-responsive">
-              ${matrixTableHTML}
-            </div>
+            ${customTableHTML}
 
-            <div class="row mt-5">
+            <div class="row mt-4">
               <div class="col-8"></div>
               <div class="col-4 text-center">
                 <p>Mojokerto, ${new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
@@ -920,14 +988,13 @@
               </div>
             </div>
 
-            <div class="text-center mt-4 no-print">
-              <button class="btn btn-primary btn-lg px-5" onclick="window.print()">🖨️️ Cetak Dokumen</button>
+            <div class="text-center mt-3 no-print">
+              <button class="btn btn-primary px-4" onclick="window.print()">🖨 Cetak Dokumen</button>
             </div>
           </div>
         </body>
         </html>
       `);
-      
       printWindow.document.close();
     }
   </script>
