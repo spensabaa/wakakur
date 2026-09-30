@@ -370,27 +370,42 @@
     }
 
     // --- FETCH MASTER DATA ---
-    function loadInitialData() {
+    function loadInitialData(retryCount = 3) {
       showLoading(true, "Mengunduh Data Timetable...");
-      fetch(`${WEB_APP_URL}?action=getAllData`)
-        .then(res => res.json())
-        .then(res => {
+      
+      fetch(WEB_APP_URL, {
+        method: "POST",
+        body: JSON.stringify({ action: "getInitialData" })
+      })
+      .then(res => {
+        // Cek apakah response berupa teks HTML atau error server (bukan JSON)
+        const contentType = res.headers.get("content-type");
+        if (!contentType || !contentType.includes("application/json")) {
+          return res.text().then(text => {
+            throw new Error("Server merespons bukan format JSON (Kemungkinan Cold Start / Maintenance).");
+          });
+        }
+        return res.json();
+      })
+      .then(res => {
+        showLoading(false);
+        if (res.status === "success") {
+          GLOBAL_DATA = res.data;
+          renderAll();
+        } else {
+          alert("Gagal memuat data: " + res.message);
+        }
+      })
+      .catch(err => {
+        console.warn(`Percobaan gagal, sisa retry: ${retryCount - 1}`, err);
+        if (retryCount > 1) {
+          // Coba ulang otomatis setelah 2 detik jika terjadi cold start
+          setTimeout(() => loadInitialData(retryCount - 1), 2000);
+        } else {
           showLoading(false);
-          if (res.status === "success") {
-            GLOBAL_DATA = res.data;
-            processAndCalculateJjm(); // Hitung ulang JJM berdasarkan bobot mapel resmi
-            populateFilterKelas();
-            renderJadwalMatrix();
-            renderTabelMasterGuru();
-            renderTabelSettingWaktu();
-          } else {
-            alert("Gagal mengambil data: " + res.message);
-          }
-        })
-        .catch(err => {
-          showLoading(false);
-          alert("Error koneksi API: " + err);
-        });
+          alert("Error koneksi API atau Server Google sedang sibuk (Cold Start). Silakan klik OK lalu muat ulang halaman (Refresh).");
+        }
+      });
     }
 
     // Kalkulasi JJM Mengajar berdasarkan alokasi JP per Mapel (Standar Dapodik)
