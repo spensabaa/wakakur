@@ -377,6 +377,7 @@
           showLoading(false);
           if (res.status === "success") {
             GLOBAL_DATA = res.data;
+            processAndCalculateJjm(); // Hitung ulang JJM berdasarkan bobot mapel resmi
             populateFilterKelas();
             renderJadwalMatrix();
             renderTabelMasterGuru();
@@ -389,6 +390,30 @@
           showLoading(false);
           alert("Error koneksi API: " + err);
         });
+    }
+
+    // Kalkulasi JJM Mengajar berdasarkan alokasi JP per Mapel (Standar Dapodik)
+    function processAndCalculateJjm() {
+      const bobotMap = {};
+      MASTER_MAPEL.forEach(m => {
+        bobotMap[m.nama.toLowerCase()] = m.jp;
+      });
+
+      // Petakan jadwal ter-plot ke masing-masing guru
+      if (GLOBAL_DATA.guru) {
+        GLOBAL_DATA.guru.forEach(g => {
+          let totalMengajar = 0;
+          (GLOBAL_DATA.jadwal || []).forEach(j => {
+            if (String(j.id_guru).trim() === String(g.id_guru).trim()) {
+              let mapelName = (j.mapel || g.kompetensi || "").toLowerCase();
+              let bobot = bobotMap[mapelName] !== undefined ? bobotMap[mapelName] : 4; // Default 4 JP jika tidak ditemukan
+              totalMengajar += bobot;
+            }
+          });
+          g.jjm_mengajar = totalMengajar;
+          g.total_jjm = (parseInt(g.jjm_mengajar) || 0) + (parseInt(g.jjm_tugas_tambahan) || 0);
+        });
+      }
     }
 
     function populateFilterKelas() {
