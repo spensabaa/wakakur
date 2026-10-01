@@ -79,8 +79,8 @@
           <div class="d-flex justify-content-between align-items-center mb-3">
             <h2>PLOTTING JADWAL PELAJARAN</h2>
             <div>
-              <button class="btn btn-secondary me-2" onclick="printJadwalMatrix()">🖨️ Cetak Jadwal</button>
-              <button class="btn btn-outline-dark me-2" onclick="printRencanaPembagianTugas()">🖨️ Cetak Pembagian Tugas (SK)</button>
+              <button class="btn btn-outline-dark me-2" onclick="printRencanaPembagianTugas()">🖨️ Cetak SK Pembagian Tugas</button>
+              <button class="btn btn-secondary me-2" onclick="printJadwalMatrix()">🖨️ Cetak Matriks</button>
               <button class="btn btn-success" onclick="saveJadwalBatchProcess()">💾 Simpan Jadwal</button>
             </div>
           </div>
@@ -873,7 +873,7 @@
       });
     }
 
-   function printJadwalMatrix() {
+    function printJadwalMatrix() {
       const selHari = document.getElementById("filterHari").value;
       const selKelasVal = document.getElementById("filterKelas").value;
       const selKelasText = document.getElementById("filterKelas").options[document.getElementById("filterKelas").selectedIndex].text;
@@ -887,24 +887,6 @@
       if (selHari !== "ALL") {
         activeWaktu = activeWaktu.filter(w => String(w.hari).toLowerCase() === String(selHari).toLowerCase());
       }
-
-      // Daftar warna pastel/lembut untuk latar belakang badge mata pelajaran saat dicetak
-      const colorPalette = [
-        "#ffdad6", "#ffdbc7", "#fff1c2", "#e2f8c9", "#cbf8eb", 
-        "#cce7ff", "#e8dbff", "#ffdcf4", "#f0f0f0", "#d7e3fc",
-        "#ffefe2", "#e4eddf", "#faeed7", "#e1f5fe", "#f3e5f5"
-      ];
-
-      // Petakan setiap mapel ke warna unik secara otomatis
-      const mapelColorMap = {};
-      let colorIndex = 0;
-      (GLOBAL_DATA.mapel || MASTER_MAPEL || []).forEach(m => {
-        const mName = (m.nama || m).toLowerCase();
-        if (!mapelColorMap[mName]) {
-          mapelColorMap[mName] = colorPalette[colorIndex % colorPalette.length];
-          colorIndex++;
-        }
-      });
 
       let printHeaderHtml = `
         <th style="width: 70px;">HARI</th>
@@ -936,18 +918,15 @@
           const matchedList = jadwalMap[key] || [];
           const currentJadwal = matchedList[slotIndex] || {};
 
-          let cellContent = "-";
+          let cellText = "-";
           if (currentJadwal.id_guru) {
             const guruObj = (GLOBAL_DATA.guru || []).find(g => String(g.id_guru).trim() === String(currentJadwal.id_guru).trim());
             if (guruObj) {
-              const mapelKey = (currentJadwal.mapel || "").toLowerCase();
-              const bgColor = mapelColorMap[mapelKey] || "#f0f0f0";
-              // Tampilkan kode guru dengan badge warna latar belakang sesuai mapel
-              cellContent = `<span style="background-color: ${bgColor}; padding: 3px 6px; border-radius: 4px; display: inline-block; font-weight: bold; border: 1px solid #bbb;">${guruObj.kode_guru}</span>`;
+              cellText = `<strong>${guruObj.kode_guru}</strong>`;
             }
           }
 
-          cellsHtml += `<td style="text-align: center; font-size: 0.75rem; vertical-align: middle;">${cellContent}</td>`;
+          cellsHtml += `<td style="text-align: center; font-size: 0.75rem; vertical-align: middle;">${cellText}</td>`;
         });
 
         printBodyHtml += `
@@ -969,20 +948,6 @@
         </table>
       `;
 
-      // Buat Tabel Legenda Warna Mapel
-      let legendItemsHtml = "";
-      for (let mName in mapelColorMap) {
-        let col = mapelColorMap[mName];
-        let capitalizedName = mName.charAt(0).toUpperCase() + mName.slice(1);
-        legendItemsHtml += `
-          <div style="display: inline-block; margin-right: 15px; margin-bottom: 5px; font-size: 0.75rem;">
-            <span style="background-color: ${col}; display: inline-block; width: 14px; height: 14px; border: 1px solid #777; margin-right: 4px; vertical-align: middle;"></span>
-            ${capitalizedName}
-          </div>
-        `;
-      }
-
-      // Buka Jendela Cetak
       const printWindow = window.open('', '_blank', 'width=1000,height=700');
       printWindow.document.write(`
         <!DOCTYPE html>
@@ -994,8 +959,7 @@
           <style>
             body { padding: 15px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #000; }
             h3, h4, p { text-align: center; margin: 2px 0; }
-            .table-matrix th, .table-matrix td { border: 1px solid #000 !important; padding: 3px !important; }
-            .legend-box { border: 1px solid #ccc; padding: 8px; border-radius: 6px; margin-top: 15px; background: #fafafa; }
+            .table-matrix th, .table-matrix td { border: 1px solid #000 !important; padding: 4px !important; }
             @media print {
               .no-print { display: none; }
               @page { size: landscape; }
@@ -1010,12 +974,7 @@
             
             ${customTableHTML}
 
-            <div class="legend-box">
-              <strong style="font-size: 0.8rem; display: block; margin-bottom: 5px;">Keterangan Warna Mata Pelajaran:</strong>
-              <div>${legendItemsHtml}</div>
-            </div>
-
-            <div class="row mt-3">
+            <div class="row mt-4">
               <div class="col-8"></div>
               <div class="col-4 text-center">
                 <p>Mojokerto, ${new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
@@ -1035,227 +994,193 @@
       printWindow.document.close();
     }
 
-     // Fungsi cetak format wakakur
     function printRencanaPembagianTugas() {
-        // Ambil data kelas VII, VIII, IX jika ada, atau buat list A-H dinamis
-        const listKelas = GLOBAL_DATA.kelas || [];
+      const listKelas = GLOBAL_DATA.kelas || [];
+      const guruMapelData = {};
+
+      (GLOBAL_DATA.guru || []).forEach(g => {
+        guruMapelData[g.id_guru] = {
+          guruObj: g,
+          mapelList: {}
+        };
+      });
+
+      const bobotMap = {};
+      MASTER_MAPEL.forEach(m => {
+        bobotMap[m.nama.toLowerCase()] = m.jp;
+      });
+
+      (GLOBAL_DATA.jadwal || []).forEach(j => {
+        const idG = String(j.id_guru).trim();
+        if (!idG || !guruMapelData[idG]) return;
+
+        const kelasObj = listKelas.find(k => String(k.id_kelas) === String(j.id_kelas));
+        if (!kelasObj) return;
+
+        let namaKelasFull = kelasObj.nama_kelas; 
+        let tingkat = "";
+        let paralel = "";
         
-        // Mapping kelas berdasarkan tingkat (Contoh: VII A-H, VIII A-H, IX A-H)
-        // Mengelompokkan kelas berdasar nama atau tingkat
-        let rombelVII = ['A','B','C','D','E','F','G','H'];
-        let rombelVIII = ['A','B','C','D','E','F','G','H'];
-        let rombelIX = ['A','B','C','D','E','F','G','H'];
-      
-        // Susun pemetaan jadwal per guru dan per mata pelajaran per kelas
-        // Struktur: guruMapel[idGuru][mapel] = { kelasVII: {A: jp, ...}, kelasVIII: {...}, kelasIX: {...} }
-        const guruMapelData = {};
-      
-        (GLOBAL_DATA.guru || []).forEach(g => {
-          guruMapelData[g.id_guru] = {
-            guruObj: g,
-            mapelList: {}
+        let upperName = namaKelasFull.toUpperCase();
+        if (upperName.includes("VII") || upperName.startsWith("7")) tingkat = "VII";
+        else if (upperName.includes("VIII") || upperName.startsWith("8")) tingkat = "VIII";
+        else if (upperName.includes("IX") || upperName.startsWith("9")) tingkat = "IX";
+
+        paralel = upperName.slice(-1); 
+
+        let mapelName = j.mapel || guruMapelData[idG].guruObj.kompetensi || "Umum";
+
+        if (!guruMapelData[idG].mapelList[mapelName]) {
+          guruMapelData[idG].mapelList[mapelName] = {
+            VII: {}, VIII: {}, IX: {}
           };
-        });
-      
-        // Petunjuk JP dari MASTER_MAPEL atau default
-        const bobotMap = {};
-        MASTER_MAPEL.forEach(m => {
-          bobotMap[m.nama.toLowerCase()] = m.jp;
-        });
-      
-        // Iterasi jadwal untuk mengisi matriks jam mengajar guru per kelas paralel
-        (GLOBAL_DATA.jadwal || []).forEach(j => {
-          const idG = String(j.id_guru).trim();
-          if (!idG || !guruMapelData[idG]) return;
-      
-          const kelasObj = listKelas.find(k => String(k.id_kelas) === String(j.id_kelas));
-          if (!kelasObj) return;
-      
-          let namaKelasFull = kelasObj.nama_kelas; // Contoh: "VII-A" atau "7A" atau "VII A"
-          // Ekstraksi tingkat (VII/VIII/IX) dan paralel (A/B/C/...)
-          let tingkat = "";
-          let paralel = "";
-          
-          let upperName = namaKelasFull.toUpperCase();
-          if (upperName.includes("VII") || upperName.startsWith("7")) tingkat = "VII";
-          else if (upperName.includes("VIII") || upperName.startsWith("8")) tingkat = "VIII";
-          else if (upperName.includes("IX") || upperName.startsWith("9")) tingkat = "IX";
-      
-          // Ambil huruf terakhir sebagai paralel jika ada
-          paralel = upperName.slice(-1); 
-      
-          let mapelName = j.mapel || guruMapelData[idG].guruObj.kompetensi || "Umum";
-      
-          if (!guruMapelData[idG].mapelList[mapelName]) {
-            guruMapelData[idG].mapelList[mapelName] = {
-              VII: {}, VIII: {}, IX: {}
-            };
-          }
-      
-          let jpPertemuan = bobotMap[mapelName.toLowerCase()] || 3; 
-          // Akumulasi JP per paralel kelas
-          let tingkatBucket = guruMapelData[idG].mapelList[mapelName][tingkat];
-          if (tingkatBucket) {
-            tingkatBucket[paralel] = (tingkatBucket[paralel] || 0) + jpPertemuan;
-          }
-        });
-      
-        // Render Baris Tabel HTML untuk Print
-        let rowsHtml = "";
-        let no = 1;
-      
-        for (let idG in guruMapelData) {
-          let dataG = guruMapelData[idG];
-          let g = dataG.guruObj;
-          let mapelKeys = Object.keys(dataG.mapelList);
-      
-          if (mapelKeys.length === 0) {
-            // Jika guru belum ada jadwal, tetap tampilkan 1 baris kosong sesuai format gambar
-            mapelKeys = [g.kompetensi || "Pelajaran"];
-            dataG.mapelList[mapelKeys[0]] = { VII: {}, VIII: {}, IX: {} };
-          }
-      
-          let isFirstMapel = true;
-          let rowspanCount = mapelKeys.length;
-      
-          mapelKeys.forEach((mp, idx) => {
-            let detailMapel = dataG.mapelList[mp] || { VII: {}, VIII: {}, IX: {} };
-      
-            // Helper builder kolom A-H untuk suatu tingkat
-            function buildSubCols(tingkatName) {
-              let subData = detailMapel[tingkatName] || {};
-              let htmlSub = "";
-              let totalSubJml = 0;
-              ['A','B','C','D','E','F','G','H'].forEach(par => {
-                let val = subData[par] || "";
-                if (val) totalSubJml += val;
-                htmlSub += `<td style="text-align:center; font-size:9px;">${val ? val : ''}</td>`;
-              });
-              return { html: htmlSub, jml: totalSubJml };
-            }
-      
-            let colVII = buildSubCols('VII');
-            let colVIII = buildSubCols('VIII');
-            let colIX = buildSubCols('IX');
-      
-            let totalJamPBM = colVII.jml + colVIII.jml + colIX.jml;
-            let totalSemuaJam = totalJamPBM + (parseInt(g.jjm_tugas_tambahan) || 0);
-      
-            rowsHtml += `
-              <tr>
-                ${isFirstMapel ? `<td rowspan="${rowspanCount}" style="text-align:center; vertical-align:middle;">${no++}</td>` : ''}
-                ${isFirstMapel ? `<td rowspan="${rowspanCount}" style="vertical-align:middle;"><b>${g.nama_guru}</b><br><span style="font-size:9px;">NIP. ${g.nip || '-'}</span></td>` : ''}
-                ${isFirstMapel ? `<td rowspan="${rowspanCount}" style="text-align:center; vertical-align:middle;">${g.kode_guru}</td>` : ''}
-                
-                <td style="vertical-align:middle;">${mp}</td>
-      
-                <!-- Kelas VII A-H -->
-                ${colVII.html}
-                <td style="text-align:center; font-weight:bold; background:#f2f2f2;">${colVII.jml || ''}</td>
-      
-                <!-- Kelas VIII A-H -->
-                ${colVIII.html}
-                <td style="text-align:center; font-weight:bold; background:#f2f2f2;">${colVIII.jml || ''}</td>
-      
-                <!-- Kelas IX A-H -->
-                ${colIX.html}
-                <td style="text-align:center; font-weight:bold; background:#f2f2f2;">${colIX.jml || ''}</td>
-      
-                <td style="text-align:center; font-weight:bold; background:#e6e6e6; vertical-align:middle;">${totalJamPBM || ''}</td>
-                
-                ${isFirstMapel ? `<td rowspan="${rowspanCount}" style="text-align:center; vertical-align:middle;">${g.tugas_tambahan || '-'}</td>` : ''}
-              </tr>
-            `;
-            isFirstMapel = false;
-          });
         }
-      
-        // Generate Jendela Print Baru
-        const printWindow = window.open('', '_blank', 'width=1200,height=800');
-        printWindow.document.write(`
-          <!DOCTYPE html>
-          <html lang="id">
-          <head>
-            <meta charset="UTF-8">
-            <title>Rencana Pembagian Tugas Guru - PBM</title>
-            <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-            <style>
-              body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #000; padding: 5px; background: #fff; }
-              .header-title { text-align: center; font-size: 11px; margin-bottom: 5px; font-weight: bold; }
-              .table-sk { width: 100%; border-collapse: collapse; font-size: 9px; }
-              .table-sk th, .table-sk td { border: 1px solid #000 !important; padding: 2px 3px !important; vertical-align: middle; }
-              .table-sk th { text-align: center; background-color: #f8f9fa; }
-              @media print {
-                .no-print { display: none; }
-                @page { size: landscape; margin: 10mm; }
-              }
-            </style>
-          </head>
-          <body>
-            <div class="container-fluid">
-              <div style="float: right; font-size: 10px;">
-                Tanggal : 1 Juli 2026
-              </div>
-              <div class="header-title clear">
-                Tentang :<br>
-                RENCANA PEMBAGIAN TUGAS GURU DALAM PROSES BELAJAR MENGAJAR<br>
-                TAHUN AJARAN 2026/2027<br>
-                SEMESTER GANJIL
-              </div>
-      
-              <table class="table-sk">
-                <thead>
-                  <tr>
-                    <th rowspan="3" style="width: 25px;">No</th>
-                    <th rowspan="3" style="width: 140px;">Nama Guru<br>NIP</th>
-                    <th rowspan="3" style="width: 35px;">Kode</th>
-                    <th rowspan="3" style="width: 90px;">Mengajar<br>Mata Pelajaran</th>
-                    
-                    <!-- Kelas VII -->
-                    <th colspan="9">Jam Mengajar Kelas VII<br>IKM (8 Rombel / 256 Siswa)</th>
-                    
-                    <!-- Kelas VIII -->
-                    <th colspan="9">Jam Mengajar Kelas VIII<br>IKM (8 Rombel / 256 Siswa)</th>
-                    
-                    <!-- Kelas IX -->
-                    <th colspan="9">Jam Mengajar Kelas IX<br>IKM (8 Rombel / 251 Siswa)</th>
-      
-                    <th rowspan="3" style="width: 30px;">Total<br>Jam<br>PBM</th>
-                    <th rowspan="3" style="width: 70px;">KET.<br>Tugas<br>Tambahan</th>
-                  </tr>
-                  <tr>
-                    <!-- Sub Kelas VII -->
-                    <th>A</th><th>B</th><th>C</th><th>D</th><th>E</th><th>F</th><th>G</th><th>H</th><th>JML</th>
-                    <!-- Sub Kelas VIII -->
-                    <th>A</th><th>B</th><th>C</th><th>D</th><th>E</th><th>F</th><th>G</th><th>H</th><th>JML</th>
-                    <!-- Sub Kelas IX -->
-                    <th>A</th><th>B</th><th>C</th><th>D</th><th>E</th><th>F</th><th>G</th><th>H</th><th>JML</th>
-                  </tr>
-                  <tr>
-                    <!-- Indikator kosong kecil -->
-                    <script>
-                      // Generate kolom kosong header kecil A-H sebanyak 3 set
-                    </script>
-                    <th>-</th><th>-</th><th>-</th><th>-</th><th>-</th><th>-</th><th>-</th><th>-</th><th>0</th>
-                    <th>-</th><th>-</th><th>-</th><th>-</th><th>-</th><th>-</th><th>-</th><th>-</th><th>0</th>
-                    <th>-</th><th>-</th><th>-</th><th>-</th><th>-</th><th>-</th><th>-</th><th>-</th><th>0</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${rowsHtml}
-                </tbody>
-              </table>
-      
-              <div class="text-center mt-3 no-print">
-                <button class="btn btn-dark px-4" onclick="window.print()">🖨 Cetak Dokumen SK Pembagian Tugas</button>
-              </div>
+
+        let jpPertemuan = bobotMap[mapelName.toLowerCase()] || 3; 
+        let tingkatBucket = guruMapelData[idG].mapelList[mapelName][tingkat];
+        if (tingkatBucket) {
+          tingkatBucket[paralel] = (tingkatBucket[paralel] || 0) + jpPertemuan;
+        }
+      });
+
+      let rowsHtml = "";
+      let no = 1;
+
+      for (let idG in guruMapelData) {
+        let dataG = guruMapelData[idG];
+        let g = dataG.guruObj;
+        let mapelKeys = Object.keys(dataG.mapelList);
+
+        if (mapelKeys.length === 0) {
+          mapelKeys = [g.kompetensi || "Pelajaran"];
+          dataG.mapelList[mapelKeys[0]] = { VII: {}, VIII: {}, IX: {} };
+        }
+
+        let isFirstMapel = true;
+        let rowspanCount = mapelKeys.length;
+
+        mapelKeys.forEach((mp) => {
+          let detailMapel = dataG.mapelList[mp] || { VII: {}, VIII: {}, IX: {} };
+
+          function buildSubCols(tingkatName) {
+            let subData = detailMapel[tingkatName] || {};
+            let htmlSub = "";
+            let totalSubJml = 0;
+            ['A','B','C','D','E','F','G','H'].forEach(par => {
+              let val = subData[par] || "";
+              if (val) totalSubJml += val;
+              htmlSub += `<td style="text-align:center; font-size:9px;">${val ? val : ''}</td>`;
+            });
+            return { html: htmlSub, jml: totalSubJml };
+          }
+
+          let colVII = buildSubCols('VII');
+          let colVIII = buildSubCols('VIII');
+          let colIX = buildSubCols('IX');
+
+          let totalJamPBM = colVII.jml + colVIII.jml + colIX.jml;
+
+          rowsHtml += `
+            <tr>
+              ${isFirstMapel ? `<td rowspan="${rowspanCount}" style="text-align:center; vertical-align:middle;">${no++}</td>` : ''}
+              ${isFirstMapel ? `<td rowspan="${rowspanCount}" style="vertical-align:middle;"><b>${g.nama_guru}</b><br><span style="font-size:9px;">NIP. ${g.nip || '-'}</span></td>` : ''}
+              ${isFirstMapel ? `<td rowspan="${rowspanCount}" style="text-align:center; vertical-align:middle;">${g.kode_guru}</td>` : ''}
+              
+              <td style="vertical-align:middle;">${mp}</td>
+
+              <!-- Kelas VII A-H -->
+              ${colVII.html}
+              <td style="text-align:center; font-weight:bold; background:#f2f2f2;">${colVII.jml || ''}</td>
+
+              <!-- Kelas VIII A-H -->
+              ${colVIII.html}
+              <td style="text-align:center; font-weight:bold; background:#f2f2f2;">${colVIII.jml || ''}</td>
+
+              <!-- Kelas IX A-H -->
+              ${colIX.html}
+              <td style="text-align:center; font-weight:bold; background:#f2f2f2;">${colIX.jml || ''}</td>
+
+              <td style="text-align:center; font-weight:bold; background:#e6e6e6; vertical-align:middle;">${totalJamPBM || ''}</td>
+              
+              ${isFirstMapel ? `<td rowspan="${rowspanCount}" style="text-align:center; vertical-align:middle;">${g.tugas_tambahan || '-'}</td>` : ''}
+            </tr>
+          `;
+          isFirstMapel = false;
+        });
+      }
+
+      const printWindow = window.open('', '_blank', 'width=1200,height=800');
+      printWindow.document.write(`
+        <!DOCTYPE html>
+        <html lang="id">
+        <head>
+          <meta charset="UTF-8">
+          <title>Rencana Pembagian Tugas Guru - PBM</title>
+          <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+          <style>
+            body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #000; padding: 5px; background: #fff; }
+            .header-title { text-align: center; font-size: 11px; margin-bottom: 5px; font-weight: bold; }
+            .table-sk { width: 100%; border-collapse: collapse; font-size: 9px; }
+            .table-sk th, .table-sk td { border: 1px solid #000 !important; padding: 2px 3px !important; vertical-align: middle; }
+            .table-sk th { text-align: center; background-color: #f8f9fa; }
+            @media print {
+              .no-print { display: none; }
+              @page { size: landscape; margin: 10mm; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="container-fluid">
+            <div style="float: right; font-size: 10px;">
+              Tanggal : 1 Juli 2026
             </div>
-          </body>
-          </html>
-        `);
-        printWindow.document.close();
+            <div class="header-title clear">
+              Tentang :<br>
+              RENCANA PEMBAGIAN TUGAS GURU DALAM PROSES BELAJAR MENGAJAR<br>
+              TAHUN AJARAN 2026/2027<br>
+              SEMESTER GANJIL
+            </div>
+
+            <table class="table-sk">
+              <thead>
+                <tr>
+                  <th rowspan="3" style="width: 25px;">No</th>
+                  <th rowspan="3" style="width: 140px;">Nama Guru<br>NIP</th>
+                  <th rowspan="3" style="width: 35px;">Kode</th>
+                  <th rowspan="3" style="width: 90px;">Mengajar<br>Mata Pelajaran</th>
+                  
+                  <th colspan="9">Jam Mengajar Kelas VII<br>IKM (8 Rombel / 256 Siswa)</th>
+                  <th colspan="9">Jam Mengajar Kelas VIII<br>IKM (8 Rombel / 256 Siswa)</th>
+                  <th colspan="9">Jam Mengajar Kelas IX<br>IKM (8 Rombel / 251 Siswa)</th>
+
+                  <th rowspan="3" style="width: 30px;">Total<br>Jam<br>PBM</th>
+                  <th rowspan="3" style="width: 70px;">KET.<br>Tugas<br>Tambahan</th>
+                </tr>
+                <tr>
+                  <th>A</th><th>B</th><th>C</th><th>D</th><th>E</th><th>F</th><th>G</th><th>H</th><th>JML</th>
+                  <th>A</th><th>B</th><th>C</th><th>D</th><th>E</th><th>F</th><th>G</th><th>H</th><th>JML</th>
+                  <th>A</th><th>B</th><th>C</th><th>D</th><th>E</th><th>F</th><th>G</th><th>H</th><th>JML</th>
+                </tr>
+                <tr>
+                  <th>-</th><th>-</th><th>-</th><th>-</th><th>-</th><th>-</th><th>-</th><th>-</th><th>0</th>
+                  <th>-</th><th>-</th><th>-</th><th>-</th><th>-</th><th>-</th><th>-</th><th>-</th><th>0</th>
+                  <th>-</th><th>-</th><th>-</th><th>-</th><th>-</th><th>-</th><th>-</th><th>-</th><th>0</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${rowsHtml}
+              </tbody>
+            </table>
+
+            <div class="text-center mt-3 no-print">
+              <button class="btn btn-dark px-4" onclick="window.print()">🖨 Cetak Dokumen SK Pembagian Tugas</button>
+            </div>
+          </div>
+        </body>
+        </html>
+      `);
+      printWindow.document.close();
     }
-    
   </script>
 </body>
 </html>
