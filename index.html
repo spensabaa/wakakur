@@ -872,7 +872,7 @@
       });
     }
 
-    function printJadwalMatrix() {
+   function printJadwalMatrix() {
       const selHari = document.getElementById("filterHari").value;
       const selKelasVal = document.getElementById("filterKelas").value;
       const selKelasText = document.getElementById("filterKelas").options[document.getElementById("filterKelas").selectedIndex].text;
@@ -886,6 +886,24 @@
       if (selHari !== "ALL") {
         activeWaktu = activeWaktu.filter(w => String(w.hari).toLowerCase() === String(selHari).toLowerCase());
       }
+
+      // Daftar warna pastel/lembut untuk latar belakang badge mata pelajaran saat dicetak
+      const colorPalette = [
+        "#ffdad6", "#ffdbc7", "#fff1c2", "#e2f8c9", "#cbf8eb", 
+        "#cce7ff", "#e8dbff", "#ffdcf4", "#f0f0f0", "#d7e3fc",
+        "#ffefe2", "#e4eddf", "#faeed7", "#e1f5fe", "#f3e5f5"
+      ];
+
+      // Petakan setiap mapel ke warna unik secara otomatis
+      const mapelColorMap = {};
+      let colorIndex = 0;
+      (GLOBAL_DATA.mapel || MASTER_MAPEL || []).forEach(m => {
+        const mName = (m.nama || m).toLowerCase();
+        if (!mapelColorMap[mName]) {
+          mapelColorMap[mName] = colorPalette[colorIndex % colorPalette.length];
+          colorIndex++;
+        }
+      });
 
       let printHeaderHtml = `
         <th style="width: 70px;">HARI</th>
@@ -917,15 +935,18 @@
           const matchedList = jadwalMap[key] || [];
           const currentJadwal = matchedList[slotIndex] || {};
 
-          let cellText = "-";
+          let cellContent = "-";
           if (currentJadwal.id_guru) {
             const guruObj = (GLOBAL_DATA.guru || []).find(g => String(g.id_guru).trim() === String(currentJadwal.id_guru).trim());
             if (guruObj) {
-              cellText = `<strong>${guruObj.kode_guru}</strong>`;
+              const mapelKey = (currentJadwal.mapel || "").toLowerCase();
+              const bgColor = mapelColorMap[mapelKey] || "#f0f0f0";
+              // Tampilkan kode guru dengan badge warna latar belakang sesuai mapel
+              cellContent = `<span style="background-color: ${bgColor}; padding: 3px 6px; border-radius: 4px; display: inline-block; font-weight: bold; border: 1px solid #bbb;">${guruObj.kode_guru}</span>`;
             }
           }
 
-          cellsHtml += `<td style="text-align: center; font-size: 0.75rem; vertical-align: middle;">${cellText}</td>`;
+          cellsHtml += `<td style="text-align: center; font-size: 0.75rem; vertical-align: middle;">${cellContent}</td>`;
         });
 
         printBodyHtml += `
@@ -947,6 +968,20 @@
         </table>
       `;
 
+      // Buat Tabel Legenda Warna Mapel
+      let legendItemsHtml = "";
+      for (let mName in mapelColorMap) {
+        let col = mapelColorMap[mName];
+        let capitalizedName = mName.charAt(0).toUpperCase() + mName.slice(1);
+        legendItemsHtml += `
+          <div style="display: inline-block; margin-right: 15px; margin-bottom: 5px; font-size: 0.75rem;">
+            <span style="background-color: ${col}; display: inline-block; width: 14px; height: 14px; border: 1px solid #777; margin-right: 4px; vertical-align: middle;"></span>
+            ${capitalizedName}
+          </div>
+        `;
+      }
+
+      // Buka Jendela Cetak
       const printWindow = window.open('', '_blank', 'width=1000,height=700');
       printWindow.document.write(`
         <!DOCTYPE html>
@@ -958,7 +993,8 @@
           <style>
             body { padding: 15px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #000; }
             h3, h4, p { text-align: center; margin: 2px 0; }
-            .table-matrix th, .table-matrix td { border: 1px solid #000 !important; padding: 4px !important; }
+            .table-matrix th, .table-matrix td { border: 1px solid #000 !important; padding: 3px !important; }
+            .legend-box { border: 1px solid #ccc; padding: 8px; border-radius: 6px; margin-top: 15px; background: #fafafa; }
             @media print {
               .no-print { display: none; }
               @page { size: landscape; }
@@ -973,7 +1009,12 @@
             
             ${customTableHTML}
 
-            <div class="row mt-4">
+            <div class="legend-box">
+              <strong style="font-size: 0.8rem; display: block; margin-bottom: 5px;">Keterangan Warna Mata Pelajaran:</strong>
+              <div>${legendItemsHtml}</div>
+            </div>
+
+            <div class="row mt-3">
               <div class="col-8"></div>
               <div class="col-4 text-center">
                 <p>Mojokerto, ${new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
